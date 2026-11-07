@@ -1677,5 +1677,15 @@
   "Delete items": "項目を削除",
   "Delete this item?": "この項目を削除しますか？",
   "Delete selected items?": "選択した項目を削除しますか？",
-  "(Double click to edit)": "(Double click to edit)"
+  "(Double click to edit)": "(Double click to edit)",
+  "Dashboard": "ダッシュボード",
+  "Get started": "はじめる",
+  "Import a file": "ファイルをインポート",
+  "Last session": "前回のセッション",
+  "Loading…": "読み込み中…",
+  "Folders only": "フォルダーのみ",
+  "Expires in": "有効期限",
+  "Drive unavailable": "ドライブを利用できません",
+  "Documents with an expiry date.": "有効期限のある文書。",
+  "Free during the pilot.": "パイロット期間中は無料です。"
 }
