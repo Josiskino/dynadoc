@@ -66,7 +66,8 @@
       id: 'text',
       labelKey: 'Document',
       icon: 'ph-light ph-file-text',
-      color: 'var(--brand-tile-document)'
+      color: 'var(--brand-tile-document)',
+      tint: 'var(--brand-tint-document)'
     },
     {
       id: 'sheet',
@@ -74,32 +75,43 @@
       // locale files ("Feuille de calcul" in fr), so this needs no edit there.
       labelKey: 'Spreadsheet',
       icon: 'ph-light ph-table',
-      color: 'var(--brand-tile-spreadsheet)'
+      color: 'var(--brand-tile-spreadsheet)',
+      tint: 'var(--brand-tint-spreadsheet)'
     },
     {
       id: 'slide',
       labelKey: 'Presentation',
       icon: 'ph-light ph-presentation-chart',
-      color: 'var(--brand-tile-presentation)'
+      color: 'var(--brand-tile-presentation)',
+      tint: 'var(--brand-tint-presentation)'
     },
     {
       id: 'design',
       labelKey: 'Design',
       icon: 'ph-light ph-paint-brush-broad',
-      color: 'var(--brand-tile-design)'
+      color: 'var(--brand-tile-design)',
+      tint: 'var(--brand-tint-design)'
     },
-    { id: 'form', labelKey: 'Form', icon: 'ph-light ph-textbox', color: 'var(--brand-tile-form)' },
+    {
+      id: 'form',
+      labelKey: 'Form',
+      icon: 'ph-light ph-textbox',
+      color: 'var(--brand-tile-form)',
+      tint: 'var(--brand-tint-form)'
+    },
     {
       id: 'meeting',
       labelKey: 'Meeting',
       icon: 'ph-light ph-video-camera',
-      color: 'var(--brand-tile-meeting)'
+      color: 'var(--brand-tile-meeting)',
+      tint: 'var(--brand-tint-meeting)'
     }
   ] as const satisfies Array<{
     id: DocumentContentType
     labelKey: string
     icon: string
     color: string
+    tint: string
   }>
 
   // Les Quick Tools ne sont plus posés sur l'accueil par défaut : ils sont
@@ -737,24 +749,139 @@
           <div class="min-w-0">
             <h2 class="text-[34px] font-light tracking-tight leading-none">{$_('Dashboard')}</h2>
             <p class="text-sm text-base-content/60 mt-2">{$_('Pick up where you left off.')}</p>
-          </div>
-          <div class="flex flex-wrap gap-2">
-            {#each quickCreate as item}
-              <button
-                class="dash-chip"
-                style="--tile:{item.color}"
-                on:click={() => handleCreate(item.id)}
-              >
-                <i class="{item.icon} text-[15px]" style="color:var(--tile)"></i>
-                {$_(item.labelKey)}
-              </button>
-            {/each}
+            {#if !isPremiumPlan}
+              <!-- Le plan tient sur une ligne, sous le titre : visible sans
+                   occuper une rangée entière du tableau de bord. -->
+              <div class="dash-planline w-fit max-w-full mt-4">
+                <span class="text-sm font-semibold">{$_('Pilot plan')}</span>
+                <span class="text-sm text-base-content/60 flex-1 min-w-0">
+                  {$_('Free during the pilot.')}
+                </span>
+                <button
+                  class="dash-outline dash-outline--sm shrink-0"
+                  on:click={() => openUpgradePlanModal({ source: 'home', highlight: 'pro' })}
+                >
+                  {$_('Compare plans')}
+                </button>
+              </div>
+            {/if}
           </div>
         </div>
 
-        <div class="flex flex-wrap gap-5 items-start">
+        <!-- Créer : une tuile par type, teintée de la couleur du type. Les
+             mêmes six entrées qu'avant, sur leur propre rangée. -->
+        <div class="grid grid-cols-3 sm:grid-cols-6 gap-3 mb-6">
+          {#each quickCreate as item}
+            <button
+              class="dash-create"
+              style="--tile:{item.color}; --tint:{item.tint}"
+              on:click={() => handleCreate(item.id)}
+            >
+              <span class="dash-create__icon" aria-hidden="true">
+                <i class="{item.icon} text-[20px]"></i>
+              </span>
+              <span class="truncate max-w-full">{$_(item.labelKey)}</span>
+            </button>
+          {/each}
+        </div>
+
+        <!-- Une grille à trois colonnes : la reprise et les lecteurs en haut,
+             puis récents, partagés et « À traiter » sur une même rangée. Les
+             cartes d'une rangée prennent la même hauteur, sans trou. -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <!-- Reprendre : la grande zone, le seul élément accentué -->
+          <section class="dash-card min-w-0 lg:col-span-2">
+            {#if resumeTarget}
+              <div class="flex flex-wrap items-start justify-between gap-4 mb-5">
+                <div class="min-w-0">
+                  <h3 class="text-base font-semibold tracking-tight">{$_('Resume')}</h3>
+                  <p class="text-xs text-base-content/60 mt-0.5">{$_('Last session')}</p>
+                </div>
+                <button class="dash-primary shrink-0" on:click={handleResume}>
+                  <i class="ph-light ph-arrow-right text-[15px]"></i>
+                  {$_('Resume')}
+                </button>
+              </div>
+
+              <div class="flex flex-wrap gap-5 items-start">
+                <div class="flex-[999_1_240px] min-w-0">
+                  <div class="flex items-start gap-2.5">
+                    <i
+                      class="{resumeTarget.style.icon} text-[20px] shrink-0 mt-0.5"
+                      style="color:{resumeTarget.style.tone}"
+                    ></i>
+                    <div class="min-w-0">
+                      <div class="text-lg font-semibold tracking-tight truncate">
+                        {resumeTarget.name}
+                      </div>
+                      {#if resumeTarget.where}
+                        <div class="text-xs text-base-content/60 truncate mt-1">
+                          {resumeTarget.where}
+                        </div>
+                      {/if}
+                    </div>
+                  </div>
+                  <div class="flex flex-wrap gap-2 mt-4">
+                    {#if resumeTarget.when}
+                      <span class="dash-pill">{formatDate(resumeTarget.when)}</span>
+                    {/if}
+                    {#if resumeTarget.expiry}
+                      <span class="dash-pill">{$_('Expires in')} {resumeTarget.expiry}</span>
+                    {/if}
+                  </div>
+                  <div class="flex flex-wrap gap-2 mt-4">
+                    <button class="dash-outline" on:click={handleOpenDialog}>{$_('Open')}</button>
+                    <button class="dash-outline" on:click={handleOpenSharedLink}>
+                      {$_('Open shared link')}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            {:else}
+              <!-- Nouvel utilisateur : rien à reprendre, on propose de partir. -->
+              <h3 class="text-base font-semibold tracking-tight">{$_('Get started')}</h3>
+              <p class="text-xs text-base-content/60 mt-0.5 mb-5">
+                {$_('Nothing to resume yet.')}
+              </p>
+              <div class="flex flex-wrap gap-3">
+                <button class="dash-primary" on:click={() => handleCreate('text')}>
+                  <i class="ph-light ph-plus text-[15px]"></i>
+                  {$_('Start your first document')}
+                </button>
+                <button class="dash-outline" on:click={handleOpenDialog}>
+                  {$_('Import a file')}
+                </button>
+                <button class="dash-outline" on:click={goToNewDocumentScreen}>
+                  {$_('Templates')}
+                </button>
+              </div>
+            {/if}
+          </section>
+
+          <section class="dash-card min-w-0">
+            <h3 class="text-base font-semibold tracking-tight">{$_('Your drives')}</h3>
+            <p class="text-xs text-base-content/60 mt-0.5 mb-4">
+              {$_('Where your recent documents sit.')}
+            </p>
+            <div class="flex flex-col gap-4">
+              {#each drives as drive}
+                <div>
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="text-sm font-semibold flex-1 min-w-0 truncate"
+                      >{$_(drive.labelKey)}</span
+                    >
+                    <span class="text-xs text-base-content/60 shrink-0">{drive.count}</span>
+                  </div>
+                  <div class="dash-bar">
+                    <div style="width:{drive.share}; background:{drive.tone}"></div>
+                  </div>
+                </div>
+              {/each}
+            </div>
+          </section>
+
           <!-- Documents récents : une teinte par type, pas de couleur gratuite -->
-          <section class="dash-card flex-1 basis-[320px] min-w-0">
+          <section class="dash-card min-w-0">
             <div class="flex items-start justify-between gap-3 mb-4">
               <div class="min-w-0">
                 <h3 class="text-base font-semibold tracking-tight">{$_('Recent Documents')}</h3>
@@ -809,137 +936,85 @@
             {/if}
           </section>
 
-          <div class="flex-[999_1_420px] min-w-0 flex flex-col gap-5">
-            <!-- Reprendre : la grande zone, le seul élément accentué -->
-            <section class="dash-card">
-              {#if resumeTarget}
-                <div class="flex flex-wrap items-start justify-between gap-4 mb-5">
-                  <div class="min-w-0">
-                    <h3 class="text-base font-semibold tracking-tight">{$_('Resume')}</h3>
-                    <p class="text-xs text-base-content/60 mt-0.5">{$_('Last session')}</p>
-                  </div>
-                  <button class="dash-primary shrink-0" on:click={handleResume}>
-                    <i class="ph-light ph-arrow-right text-[15px]"></i>
-                    {$_('Resume')}
-                  </button>
-                </div>
-
-                <div class="flex flex-wrap gap-5 items-start">
-                  <div class="flex-[999_1_240px] min-w-0">
-                    <div class="flex items-start gap-2.5">
-                      <i
-                        class="{resumeTarget.style.icon} text-[20px] shrink-0 mt-0.5"
-                        style="color:{resumeTarget.style.tone}"
-                      ></i>
-                      <div class="min-w-0">
-                        <div class="text-lg font-semibold tracking-tight truncate">
-                          {resumeTarget.name}
-                        </div>
-                        {#if resumeTarget.where}
-                          <div class="text-xs text-base-content/60 truncate mt-1">
-                            {resumeTarget.where}
-                          </div>
-                        {/if}
-                      </div>
-                    </div>
-                    <div class="flex flex-wrap gap-2 mt-4">
-                      {#if resumeTarget.when}
-                        <span class="dash-pill">{formatDate(resumeTarget.when)}</span>
-                      {/if}
-                      {#if resumeTarget.expiry}
-                        <span class="dash-pill">{$_('Expires in')} {resumeTarget.expiry}</span>
-                      {/if}
-                    </div>
-                    <div class="flex flex-wrap gap-2 mt-4">
-                      <button class="dash-outline" on:click={handleOpenDialog}>{$_('Open')}</button>
-                      <button class="dash-outline" on:click={handleOpenSharedLink}>
-                        {$_('Open shared link')}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              {:else}
-                <!-- Nouvel utilisateur : rien à reprendre, on propose de partir. -->
-                <h3 class="text-base font-semibold tracking-tight">{$_('Get started')}</h3>
-                <p class="text-xs text-base-content/60 mt-0.5 mb-5">
-                  {$_('Nothing to resume yet.')}
-                </p>
-                <div class="flex flex-wrap gap-3">
-                  <button class="dash-primary" on:click={() => handleCreate('text')}>
-                    <i class="ph-light ph-plus text-[15px]"></i>
-                    {$_('Start your first document')}
-                  </button>
-                  <button class="dash-outline" on:click={handleOpenDialog}>
-                    {$_('Import a file')}
-                  </button>
-                  <button class="dash-outline" on:click={goToNewDocumentScreen}>
-                    {$_('Templates')}
-                  </button>
-                </div>
-              {/if}
-            </section>
-
-            <div class="flex flex-wrap gap-5 items-start">
-              {#if reviewItems.length}
-                <!-- Affichée seulement quand l'application a vraiment quelque
-                     chose à y mettre : ici, des documents qui expirent. -->
-                <section class="dash-card flex-[999_1_280px] min-w-0">
-                  <h3 class="text-base font-semibold tracking-tight">{$_('To review')}</h3>
-                  <p class="text-xs text-base-content/60 mt-0.5 mb-3">
-                    {$_('Documents with an expiry date.')}
-                  </p>
-                  <div class="flex flex-col">
-                    {#each reviewItems as item}
-                      <div class="dash-row">
-                        <span
-                          class="dash-row__icon"
-                          style="--tint:{item.tint}; --tile:{item.tone}"
-                          aria-hidden="true"
-                        >
-                          <i class="{item.icon} text-[16px]"></i>
-                        </span>
-                        <span class="min-w-0 flex-1 text-left">
-                          <span class="block text-sm font-semibold truncate">{item.name}</span>
-                          <span class="block text-xs text-base-content/60 mt-0.5">
-                            {$_('Expires in')}
-                            {item.remaining}
-                          </span>
-                        </span>
-                        <button
-                          class="dash-outline dash-outline--sm shrink-0"
-                          on:click={() => handleOpenRecent(item.entry)}
-                        >
-                          {$_('Open')}
-                        </button>
-                      </div>
-                    {/each}
-                  </div>
-                </section>
-              {/if}
-
-              <section class="dash-card flex-1 basis-[240px] min-w-0">
-                <h3 class="text-base font-semibold tracking-tight">{$_('Your drives')}</h3>
-                <p class="text-xs text-base-content/60 mt-0.5 mb-4">
-                  {$_('Where your recent documents sit.')}
-                </p>
-                <div class="flex flex-col gap-4">
-                  {#each drives as drive}
-                    <div>
-                      <div class="flex items-center gap-2 mb-2">
-                        <span class="text-sm font-semibold flex-1 min-w-0 truncate"
-                          >{$_(drive.labelKey)}</span
-                        >
-                        <span class="text-xs text-base-content/60 shrink-0">{drive.count}</span>
-                      </div>
-                      <div class="dash-bar">
-                        <div style="width:{drive.share}; background:{drive.tone}"></div>
-                      </div>
-                    </div>
-                  {/each}
-                </div>
-              </section>
+          <!-- Partagé avec vous : remonté près des récents, le travail en
+               équipe passe avant la liste complète. -->
+          <section id="shared" class="dash-card min-w-0">
+            <div class="flex flex-wrap items-start justify-between gap-3 mb-4">
+              <h3 class="text-base font-semibold tracking-tight">{$_('Shared with you')}</h3>
+              <button
+                class="dash-outline dash-outline--sm shrink-0"
+                on:click={handleOpenSharedLink}
+              >
+                <i class="ph-light ph-link text-[14px]"></i>
+                {$_('Open shared link')}
+              </button>
             </div>
-          </div>
+            <p class="text-sm text-base-content/60">
+              {$_(
+                'Collaborations and shared links appear here. Paste a shared link to open a live document.'
+              )}
+            </p>
+          </section>
+
+          <!-- Documents cloud : un résumé par lecteur, dans le langage des
+               autres cartes. Recherche et arborescence restent dans le
+               gestionnaire de fichiers. -->
+          <section id="cloud-documents" class="dash-card min-w-0">
+            <div class="flex items-start justify-between gap-3 mb-1">
+              <div class="min-w-0">
+                <h3 class="text-base font-semibold tracking-tight">{$_('Cloud Documents')}</h3>
+                <p class="text-xs text-base-content/60 mt-0.5">
+                  {$_('Manage your connected drives without opening a document.')}
+                </p>
+              </div>
+              <button
+                class="dash-ghost-round shrink-0"
+                title={$_('Open file manager')}
+                aria-label={$_('Open file manager')}
+                on:click={() => openSecondaryPanel('filesManager')}
+              >
+                <i class="ph-light ph-folder-open text-[15px]"></i>
+              </button>
+            </div>
+            <DriveExplorerWidget compact />
+          </section>
+
+          {#if reviewItems.length}
+            <!-- Affichée seulement quand l'application a vraiment quelque
+                 chose à y mettre : ici, des documents qui expirent. -->
+            <section class="dash-card min-w-0 lg:col-span-3">
+              <h3 class="text-base font-semibold tracking-tight">{$_('To review')}</h3>
+              <p class="text-xs text-base-content/60 mt-0.5 mb-3">
+                {$_('Documents with an expiry date.')}
+              </p>
+              <div class="flex flex-col">
+                {#each reviewItems as item}
+                  <div class="dash-row">
+                    <span
+                      class="dash-row__icon"
+                      style="--tint:{item.tint}; --tile:{item.tone}"
+                      aria-hidden="true"
+                    >
+                      <i class="{item.icon} text-[16px]"></i>
+                    </span>
+                    <span class="min-w-0 flex-1 text-left">
+                      <span class="block text-sm font-semibold truncate">{item.name}</span>
+                      <span class="block text-xs text-base-content/60 mt-0.5">
+                        {$_('Expires in')}
+                        {item.remaining}
+                      </span>
+                    </span>
+                    <button
+                      class="dash-outline dash-outline--sm shrink-0"
+                      on:click={() => handleOpenRecent(item.entry)}
+                    >
+                      {$_('Open')}
+                    </button>
+                  </div>
+                {/each}
+              </div>
+            </section>
+          {/if}
         </div>
       </section>
 
@@ -968,220 +1043,173 @@
         </section>
       {/if}
 
-      {#if !isPremiumPlan}
-        <!-- Le plan tient sur une ligne, pas sur une carte. -->
-        <div class="dash-planline mb-8">
-          <span class="text-sm font-semibold">{$_('Pilot plan')}</span>
-          <span class="text-sm text-base-content/60 flex-1 min-w-0">
-            {$_('Free during the pilot.')}
-          </span>
-          <button
-            class="dash-outline dash-outline--sm shrink-0"
-            on:click={() => openUpgradePlanModal({ source: 'home', highlight: 'pro' })}
-          >
-            {$_('Compare plans')}
-          </button>
-        </div>
-      {/if}
-
-      <section id="cloud-documents" class="mb-10">
-        <div class="flex items-center justify-between mb-4">
-          <div>
-            <h2 class="text-2xl font-black tracking-tighter">{$_('Cloud Documents')}</h2>
-            <p class="text-sm opacity-75">
-              {$_('Manage your connected drives without opening a document.')}
-            </p>
-          </div>
-          <button class="btn btn-sm btn-ghost" on:click={() => openSecondaryPanel('filesManager')}>
-            <i class="ph-light ph-folder-open mr-1"></i>
-            {$_('Open file manager')}
-          </button>
-        </div>
-        <div class="border border-base-200 rounded-lg overflow-hidden h-[360px]">
-          <DriveExplorerWidget />
-        </div>
-      </section>
-
-      <section id="recent">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-bold tracking-tight">{$_('Recent Documents')}</h2>
-          <div class="flex items-center gap-2">
-            <button
-              class="btn btn-xs btn-ghost"
-              class:opacity-60={!showPinnedOnly}
-              on:click={() => (showPinnedOnly = !showPinnedOnly)}
-            >
-              <i class="ph-light ph-push-pin mr-1"></i>
-              {$_('Pinned')}
-            </button>
-            <div class="join border border-base-200">
+      <div>
+        <section id="recent" class="min-w-0">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-bold tracking-tight">{$_('Documents')}</h2>
+            <div class="flex items-center gap-2">
               <button
-                class="join-item btn btn-xs btn-ghost"
-                class:active={viewMode === 'list'}
-                on:click={() => (viewMode = 'list')}
+                class="btn btn-xs btn-ghost"
+                class:opacity-60={!showPinnedOnly}
+                on:click={() => (showPinnedOnly = !showPinnedOnly)}
               >
-                <i class="ph-light ph-list"></i>
+                <i class="ph-light ph-push-pin mr-1"></i>
+                {$_('Pinned')}
               </button>
-              <button
-                class="join-item btn btn-xs btn-ghost"
-                class:active={viewMode === 'grid'}
-                on:click={() => (viewMode = 'grid')}
-              >
-                <i class="ph-light ph-squares-four"></i>
-              </button>
+              <div class="join border border-base-200">
+                <button
+                  class="join-item btn btn-xs btn-ghost"
+                  class:active={viewMode === 'list'}
+                  on:click={() => (viewMode = 'list')}
+                >
+                  <i class="ph-light ph-list"></i>
+                </button>
+                <button
+                  class="join-item btn btn-xs btn-ghost"
+                  class:active={viewMode === 'grid'}
+                  on:click={() => (viewMode = 'grid')}
+                >
+                  <i class="ph-light ph-squares-four"></i>
+                </button>
+              </div>
             </div>
           </div>
-        </div>
 
-        {#if viewMode === 'list'}
-          <div class="overflow-x-auto border border-base-200 rounded-sm bg-base-100 shadow-sm">
-            <table class="table table-compact w-full">
-              <thead class="bg-base-200 border-b border-base-200">
-                <tr class="text-[10px] uppercase tracking-widest opacity-60 font-black">
-                  <th class="bg-transparent">{$_('Name')}</th>
-                  <th class="bg-transparent">{$_('Location')}</th>
-                  <th class="bg-transparent">{$_('Modified')}</th>
-                  <th class="bg-transparent text-right">{$_('Pin')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {#if recentRows.length === 0}
-                  <tr>
-                    <td colspan="4" class="text-center text-sm opacity-50 py-6">
-                      {$_('No recent documents yet.')}
-                    </td>
+          {#if viewMode === 'list'}
+            <div class="overflow-x-auto border border-base-200 rounded-sm bg-base-100 shadow-sm">
+              <table class="table table-compact w-full">
+                <thead class="bg-base-200 border-b border-base-200">
+                  <tr class="text-[10px] uppercase tracking-widest opacity-60 font-black">
+                    <th class="bg-transparent">{$_('Name')}</th>
+                    <th class="bg-transparent">{$_('Location')}</th>
+                    <th class="bg-transparent">{$_('Modified')}</th>
+                    <th class="bg-transparent text-right">{$_('Pin')}</th>
                   </tr>
-                {:else}
-                  {#each recentRows as file}
-                    {@const status = ephemeralStatus[file.id]}
-                    <tr class="hover:bg-base-200/50 cursor-pointer transition-colors group">
-                      <td on:click={() => handleOpenRecent(file)}>
-                        <div class="flex items-center gap-3">
-                          <i
-                            class="ph-light {file.type === Utils.FILE_TYPES.pdf
-                              ? 'ph-file-pdf text-error'
-                              : file.type === 'slide'
-                                ? 'ph-file-ppt text-orange-400'
-                                : file.type === 'excel'
-                                  ? 'ph-file-xls text-green-500'
-                                  : 'ph-file-text text-primary'} text-xl"
-                          ></i>
-                          <div class="min-w-0 flex items-center gap-2">
-                            <span class="text-[13px] font-medium truncate">{file.name}</span>
-
-                            {#if status}
-                              {@const remainingMs = status.remainingMs - (Date.now() - nowTick)}
-                              <span
-                                class="text-[9px] uppercase tracking-[0.18em] px-1.5 py-0.5 rounded
-                                  {badgeTone(remainingMs) === 'danger'
-                                  ? 'bg-rose-500/25 text-rose-200'
-                                  : badgeTone(remainingMs) === 'warning'
-                                    ? 'bg-amber-500/20 text-amber-200'
-                                    : 'bg-emerald-500/20 text-emerald-200'}"
-                                title={`${$_('Expires at')}: ${new Date(status.deadlineAt).toLocaleString()}`}
-                              >
-                                {remainingMs <= 0
-                                  ? $_('Expired')
-                                  : `${formatRemaining(remainingMs)} ${$_('...left')}`}
-                              </span>
-                            {/if}
-                          </div>
-                        </div>
-                      </td>
-                      <td class="text-xs opacity-60">{$_(file.locationLabelKey)}</td>
-                      <td class="text-xs opacity-60"
-                        >{formatDate(file.updatedAt || file.openedAt)}</td
-                      >
-                      <td class="text-right">
-                        <button class="btn btn-ghost btn-xs" on:click={() => togglePin(file)}>
-                          <i
-                            class="ph-light {pinnedIds.includes(file.id)
-                              ? 'ph-push-pin-fill text-primary'
-                              : 'ph-push-pin'}"
-                          ></i>
-                        </button>
+                </thead>
+                <tbody>
+                  {#if recentRows.length === 0}
+                    <tr>
+                      <td colspan="4" class="text-center text-sm opacity-50 py-6">
+                        {$_('No recent documents yet.')}
                       </td>
                     </tr>
-                  {/each}
-                {/if}
-              </tbody>
-            </table>
-          </div>
-        {:else}
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {#each recentRows as file, i}
-              {@const status = ephemeralStatus[file.id]}
-              <div
-                class="wps-recent-card border border-base-200 rounded-md p-4 hover:border-primary hover:shadow-md transition-all text-left"
-                style="animation-delay:{Math.min(i, 12) * 35}ms"
-                on:click={() => handleOpenRecent(file)}
-              >
-                <div class="flex items-start justify-between gap-2">
-                  <div class="flex items-start gap-3">
-                    <i
-                      class="ph-light {file.type === Utils.FILE_TYPES.pdf
-                        ? 'ph-file-pdf text-error'
-                        : file.type === 'slide'
-                          ? 'ph-file-ppt text-orange-400'
-                          : file.type === 'excel'
-                            ? 'ph-file-xls text-green-500'
-                            : 'ph-file-text text-primary'} text-xl"
-                    ></i>
-                    <div class="min-w-0">
-                      <div class="text-sm font-semibold truncate flex items-center gap-2">
-                        {file.name}
+                  {:else}
+                    {#each recentRows as file}
+                      {@const status = ephemeralStatus[file.id]}
+                      <tr class="hover:bg-base-200/50 cursor-pointer transition-colors group">
+                        <td on:click={() => handleOpenRecent(file)}>
+                          <div class="flex items-center gap-3">
+                            <i
+                              class="ph-light {file.type === Utils.FILE_TYPES.pdf
+                                ? 'ph-file-pdf text-error'
+                                : file.type === 'slide'
+                                  ? 'ph-file-ppt text-orange-400'
+                                  : file.type === 'excel'
+                                    ? 'ph-file-xls text-green-500'
+                                    : 'ph-file-text text-primary'} text-xl"
+                            ></i>
+                            <div class="min-w-0 flex items-center gap-2">
+                              <span class="text-[13px] font-medium truncate">{file.name}</span>
 
-                        {#if status}
-                          {@const remainingMs = status.remainingMs - (Date.now() - nowTick)}
-                          <span
-                            class="text-[9px] uppercase tracking-[0.18em] px-1.5 py-0.5 rounded
-                              {badgeTone(remainingMs) === 'danger'
-                              ? 'bg-rose-500/25 text-rose-200'
-                              : badgeTone(remainingMs) === 'warning'
-                                ? 'bg-amber-500/20 text-amber-200'
-                                : 'bg-emerald-500/20 text-emerald-200'}"
-                            title={`${$_('Expires at')}: ${new Date(status.deadlineAt).toLocaleString()}`}
-                          >
-                            {remainingMs <= 0
-                              ? $_('Expired')
-                              : `${formatRemaining(remainingMs)} ${$_('...left')}`}
-                          </span>
-                        {/if}
-                      </div>
-                      <div class="text-xs opacity-50 truncate">{file.path}</div>
-                      <div class="text-[10px] opacity-40 mt-1">
-                        {formatDate(file.updatedAt || file.openedAt)}
+                              {#if status}
+                                {@const remainingMs = status.remainingMs - (Date.now() - nowTick)}
+                                <span
+                                  class="text-[9px] uppercase tracking-[0.18em] px-1.5 py-0.5 rounded
+                                    {badgeTone(remainingMs) === 'danger'
+                                    ? 'bg-rose-500/25 text-rose-200'
+                                    : badgeTone(remainingMs) === 'warning'
+                                      ? 'bg-amber-500/20 text-amber-200'
+                                      : 'bg-emerald-500/20 text-emerald-200'}"
+                                  title={`${$_('Expires at')}: ${new Date(status.deadlineAt).toLocaleString()}`}
+                                >
+                                  {remainingMs <= 0
+                                    ? $_('Expired')
+                                    : `${formatRemaining(remainingMs)} ${$_('...left')}`}
+                                </span>
+                              {/if}
+                            </div>
+                          </div>
+                        </td>
+                        <td class="text-xs opacity-60">{$_(file.locationLabelKey)}</td>
+                        <td class="text-xs opacity-60"
+                          >{formatDate(file.updatedAt || file.openedAt)}</td
+                        >
+                        <td class="text-right">
+                          <button class="btn btn-ghost btn-xs" on:click={() => togglePin(file)}>
+                            <i
+                              class="ph-light {pinnedIds.includes(file.id)
+                                ? 'ph-push-pin-fill text-primary'
+                                : 'ph-push-pin'}"
+                            ></i>
+                          </button>
+                        </td>
+                      </tr>
+                    {/each}
+                  {/if}
+                </tbody>
+              </table>
+            </div>
+          {:else}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {#each recentRows as file, i}
+                {@const status = ephemeralStatus[file.id]}
+                <div
+                  class="wps-recent-card border border-base-200 rounded-md p-4 hover:border-primary hover:shadow-md transition-all text-left"
+                  style="animation-delay:{Math.min(i, 12) * 35}ms"
+                  on:click={() => handleOpenRecent(file)}
+                >
+                  <div class="flex items-start justify-between gap-2">
+                    <div class="flex items-start gap-3">
+                      <i
+                        class="ph-light {file.type === Utils.FILE_TYPES.pdf
+                          ? 'ph-file-pdf text-error'
+                          : file.type === 'slide'
+                            ? 'ph-file-ppt text-orange-400'
+                            : file.type === 'excel'
+                              ? 'ph-file-xls text-green-500'
+                              : 'ph-file-text text-primary'} text-xl"
+                      ></i>
+                      <div class="min-w-0">
+                        <div class="text-sm font-semibold truncate flex items-center gap-2">
+                          {file.name}
+
+                          {#if status}
+                            {@const remainingMs = status.remainingMs - (Date.now() - nowTick)}
+                            <span
+                              class="text-[9px] uppercase tracking-[0.18em] px-1.5 py-0.5 rounded
+                                {badgeTone(remainingMs) === 'danger'
+                                ? 'bg-rose-500/25 text-rose-200'
+                                : badgeTone(remainingMs) === 'warning'
+                                  ? 'bg-amber-500/20 text-amber-200'
+                                  : 'bg-emerald-500/20 text-emerald-200'}"
+                              title={`${$_('Expires at')}: ${new Date(status.deadlineAt).toLocaleString()}`}
+                            >
+                              {remainingMs <= 0
+                                ? $_('Expired')
+                                : `${formatRemaining(remainingMs)} ${$_('...left')}`}
+                            </span>
+                          {/if}
+                        </div>
+                        <div class="text-xs opacity-50 truncate">{file.path}</div>
+                        <div class="text-[10px] opacity-40 mt-1">
+                          {formatDate(file.updatedAt || file.openedAt)}
+                        </div>
                       </div>
                     </div>
+                    <button class="btn btn-ghost btn-xs" on:click={() => togglePin(file)}>
+                      <i
+                        class="ph-light {pinnedIds.includes(file.id)
+                          ? 'ph-push-pin-fill text-primary'
+                          : 'ph-push-pin'}"
+                      ></i>
+                    </button>
                   </div>
-                  <button class="btn btn-ghost btn-xs" on:click={() => togglePin(file)}>
-                    <i
-                      class="ph-light {pinnedIds.includes(file.id)
-                        ? 'ph-push-pin-fill text-primary'
-                        : 'ph-push-pin'}"
-                    ></i>
-                  </button>
                 </div>
-              </div>
-            {/each}
-          </div>
-        {/if}
-      </section>
-
-      <section id="shared" class="mt-10">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-bold tracking-tight">{$_('Shared with you')}</h2>
-          <button class="btn btn-xs btn-ghost" on:click={handleOpenSharedLink}>
-            <i class="ph-light ph-link mr-1"></i>
-            {$_('Open shared link')}
-          </button>
-        </div>
-        <div class="border border-base-200 rounded-md p-6 bg-base-100 text-sm opacity-75">
-          {$_(
-            'Collaborations and shared links appear here. Paste a shared link to open a live document.'
-          )}
-        </div>
-      </section>
+              {/each}
+            </div>
+          {/if}
+        </section>
+      </div>
     </div>
   </main>
 </div>

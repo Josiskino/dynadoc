@@ -4,6 +4,10 @@
   import DriveAccountPanel from './DriveAccountPanel.svelte'
   import type { AuthSession } from '../../../../../types/auth'
 
+  // compact: one summary row per drive, no header of its own, for a card on
+  // the home dashboard. The primary sidebar keeps the full panels.
+  let { compact = false }: { compact?: boolean } = $props()
+
   let authState = $derived($authStore)
   const DEFAULT_ORG_KEYS = new Set(['dynadoc-org', 'default-org', 'default', 'dynadoc', 'public'])
   const isDefaultOrg = (value: string | null | undefined) => {
@@ -81,22 +85,42 @@
   })
 </script>
 
-<div class="h-full flex flex-col bg-base-200 font-sans select-none">
-  <div class="flex items-center justify-between px-3.5 py-2.5">
-    <span class="flex items-center gap-2 min-w-0">
-      <i class="ph-light ph-hard-drives text-[15px] opacity-60" aria-hidden="true"></i>
-      <span class="text-[10.5px] font-bold uppercase tracking-[0.1em] opacity-70 truncate">
-        {$_('Cloud Drives')}
+<div
+  class="flex flex-col font-sans select-none"
+  class:h-full={!compact}
+  class:bg-base-200={!compact}
+>
+  {#if !compact}
+    <div class="flex items-center justify-between px-3.5 py-2.5">
+      <span class="flex items-center gap-2 min-w-0">
+        <i class="ph-light ph-hard-drives text-[15px] opacity-60" aria-hidden="true"></i>
+        <span class="text-[10.5px] font-bold uppercase tracking-[0.1em] opacity-70 truncate">
+          {$_('Cloud Drives')}
+        </span>
       </span>
-    </span>
-    <span class="text-[10.5px] font-bold opacity-70 shrink-0">{driveSources.length || 0}</span>
-  </div>
+      <span class="text-[10.5px] font-bold opacity-70 shrink-0">{driveSources.length || 0}</span>
+    </div>
+  {/if}
 
   {#if !driveSources.length}
     <div class="drv-msg flex-1 flex flex-col items-center justify-center">
       <i class="ph-light ph-cloud-slash text-[24px] opacity-35" aria-hidden="true"></i>
       <p class="drv-msg__t mt-2">{$_('No drive connected')}</p>
       <p class="drv-msg__s">{$_('Sign in to connect your cloud drive.')}</p>
+    </div>
+  {:else if compact}
+    <div class="flex flex-col divide-y divide-base-200">
+      {#each driveSources as source}
+        <DriveAccountPanel
+          compact
+          accountOrg={source.orgKey}
+          accountLabel={`${driveLabelPrefix} - ${source.label}`}
+          accountEmail={source.email}
+          authenticated={source.authenticated}
+          isActive={source.orgKey === activeAccount}
+          onActivate={handleActivateAccount}
+        />
+      {/each}
     </div>
   {:else}
     <!-- Le panneau est dessine pour 232 px ; integre en pleine largeur
