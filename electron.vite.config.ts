@@ -112,6 +112,33 @@ export default defineConfig({
     server: {
       // host: '127.0.0.1',
       hmr: false, // 🚫 disable vite hot module replacement for renderer
+      // Transform the first screen's modules while Electron is still booting.
+      //
+      // Measured on this tree: bundling main and preload costs 372ms together
+      // (348ms and 24ms), and pre-bundling the heavy dependencies costs about a
+      // second. The renderer is the mass -- 41s to build it for production,
+      // across 1028 files and 60 editor extensions. In dev it is not bundled,
+      // it is transformed on demand, which is why the window appears quickly
+      // and then sits on the splash: every module the first screen needs is
+      // transformed only once the renderer asks for it.
+      //
+      // Electron's own boot is dead time for Vite. `warmup` fills it: these
+      // files are transformed in the background as soon as the dev server is
+      // up, so the renderer's first requests find them ready. It changes no
+      // output and does not apply to a production build -- `server` is a dev
+      // setting.
+      //
+      // The list is the entry and what it pulls synchronously on first paint.
+      // Adding more is not free: each file here is work done before anything
+      // is asked for, so a file the first screen does not need delays the one
+      // it does.
+      warmup: {
+        clientFiles: [
+          './src/renderer/src/main.ts',
+          './src/renderer/src/App.svelte',
+          './src/renderer/src/Main.svelte'
+        ]
+      },
       // watch: { usePolling: true } // (optional) if you still want file change detection
       watch: {
         ignored: [
