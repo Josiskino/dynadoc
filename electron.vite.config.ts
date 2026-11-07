@@ -269,7 +269,15 @@ export default defineConfig({
         'react',
         'react-dom',
         '@fluentui/react-components',
-        'w3c-keyname'
+        'w3c-keyname',
+        // Discovered on first page load otherwise, which triggers a re-bundle
+        // and a full reload mid-startup. The web config already lists these.
+        'process',
+        '@radix-ui/react-avatar',
+        '@radix-ui/react-slot',
+        'fuse.js',
+        'tiptap-table-plus',
+        'unocss-preset-daisy'
         // 3. Force-include everything from  dependencies object at cold start
         // ...allDependencies,
         /* '@fluentui/react-datepicker-compat',
