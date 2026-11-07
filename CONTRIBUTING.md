@@ -107,7 +107,26 @@ chore(deps): bump tiptap to 3.1.0
 
 Reference issues in the body: `Fixes #123`.
 
-Do **not** add `Co-Authored-By` trailers.
+Credit everyone who worked on the change. If someone paired with you, found
+the bug, wrote the test or talked you out of a worse approach, add a
+`Co-Authored-By` trailer for them — one line per person, at the end of the
+message, with the name and address they commit under:
+
+```
+Co-Authored-By: Ada Lovelace <ada@example.org>
+```
+
+A model counts. If Claude, or any other assistant, wrote or shaped part of the
+change, name it on the same kind of line:
+
+```
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+GitHub reads those trailers and shows each author of the commit, so the credit
+follows the work rather than the account that happened to run `git commit`. It
+also means a reader of the history can see how a change was made, which is
+worth more than a tidy single name.
 
 A `husky` + `lint-staged` hook runs `prettier --write` on staged files. If a
 file was not previously formatted, your commit will carry unrelated formatting

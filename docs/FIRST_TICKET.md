@@ -104,7 +104,8 @@ git add src/renderer/src/shared/ipc.ts
 git commit -m "feat(file-menu): add duplicate document action"
 ```
 
-Convention: `type(scope): description`. See [CONTRIBUTING.md](../CONTRIBUTING.md). No `Co-Authored-By`.
+Convention: `type(scope): description`. See [CONTRIBUTING.md](../CONTRIBUTING.md).
+If anyone worked on it with you, add a `Co-Authored-By` trailer for them.
 
 ## 9. PR
 

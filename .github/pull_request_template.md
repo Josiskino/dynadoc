@@ -42,7 +42,8 @@ Closes #
 ## Checklist
 
 - [ ] Branch named `feat/`, `fix/`, `docs/`, `chore/`, `refactor/` or `perf/`
-- [ ] Commits follow Conventional Commits, with no `Co-Authored-By` trailers
+- [ ] Commits follow Conventional Commits
+- [ ] Everyone who worked on the change is credited with a `Co-Authored-By` trailer, a model included
 - [ ] No secrets, credentials, keys or `.env*` files committed
 - [ ] No compiled binaries, archives or build output committed
 - [ ] No hardcoded hostnames, IP addresses or ports — read them from `import.meta.env` and add the variable to `.env.example`
