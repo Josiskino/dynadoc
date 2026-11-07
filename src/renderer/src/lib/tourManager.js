@@ -116,7 +116,7 @@ function addSvelteStep(tour, StepComponent, options, componentProps = {}) {
         } catch {
           // ignore
         }
-      },
+      }
       // do not spread `options.when` to avoid clobbering the Svelte bridge
     }
   })
@@ -135,7 +135,7 @@ export function startHomeTour() {
     {
       id: 'home-welcome',
       buttons: [
-        { text: 'Skip', action: () => tour.cancel() },
+        { text: 'Skip tour', classes: 'shepherd-button-skip', action: () => tour.cancel() },
         { text: 'Next', action: () => tour.next() }
       ]
     },
@@ -149,8 +149,8 @@ export function startHomeTour() {
       id: 'home-theme',
       attachTo: { element: '.theme-switcher', on: 'bottom' },
       buttons: [
-        { text: 'Back', action: () => tour.back() },
-        { text: 'Skip', action: () => tour.cancel() },
+        { text: 'Skip tour', classes: 'shepherd-button-skip', action: () => tour.cancel() },
+        { text: 'Back', classes: 'shepherd-button-secondary', action: () => tour.back() },
         { text: 'Next', action: () => tour.next() }
       ]
     },
@@ -164,7 +164,7 @@ export function startHomeTour() {
       id: 'home-new-doc',
       attachTo: { element: '.btn-new-document', on: 'bottom' },
       buttons: [
-        { text: 'Back', action: () => tour.back() },
+        { text: 'Back', classes: 'shepherd-button-secondary', action: () => tour.back() },
         { text: 'Done', action: () => tour.complete() }
       ]
     },
@@ -212,7 +212,7 @@ export function startEditorTour() {
         }
       },
       buttons: [
-        { text: 'Back', action: () => tour.back() },
+        { text: 'Back', classes: 'shepherd-button-secondary', action: () => tour.back() },
         { text: 'Next', action: () => tour.next() }
       ]
     },
@@ -225,7 +225,7 @@ export function startEditorTour() {
     {
       id: 'editor-dev-question',
       buttons: [
-        { text: 'No', action: () => tour.complete() },
+        { text: 'No', classes: 'shepherd-button-secondary', action: () => tour.complete() },
         { text: 'Yes', action: () => tour.show('editor-dev-tools') }
       ]
     },
@@ -239,8 +239,7 @@ export function startEditorTour() {
       id: 'editor-dev-tools',
       attachTo: { element: '.editor-controls', on: 'bottom' },
       advanceOn: {
-        selector:
-          '.code-editor-toggle, .code-editor-toggle *, .console-toggle, .console-toggle *',
+        selector: '.code-editor-toggle, .code-editor-toggle *, .console-toggle, .console-toggle *',
         event: 'click'
       },
       buttons: []

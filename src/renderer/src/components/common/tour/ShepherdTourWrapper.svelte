@@ -120,10 +120,11 @@
     font-size: 0.95rem;
   }
 
-  /* Buttons - Using your Teal Accent (--color-base-300) */
+  /* Primary button (Next, Done, Yes): the accent fill with --accent-on ink,
+     the pair main.css measures for both themes (as .dash-primary). */
   :global(.shepherd-button) {
-    background: var(--color-base-300) !important;
-    color: white !important; /* Teal looks best with white text */
+    background: var(--accent) !important;
+    color: var(--accent-on) !important;
     border-radius: 60px !important;
     padding: 0.5rem 1rem !important;
     font-weight: 600 !important;
@@ -132,21 +133,41 @@
     cursor: pointer;
   }
 
+  /* Darken on hover, as .dash-primary does: lightening the fill was what
+     made the label disappear. */
   :global(.shepherd-button:hover) {
-    filter: brightness(1.1);
+    background: color-mix(in srgb, var(--accent) 88%, #000000) !important;
     box-shadow: 0 4px 12px rgba(0, 190, 172, 0.3);
   }
 
-  /* Secondary/Skip buttons (Outline style) */
+  /* Secondary buttons (Back, No): outline style. */
   :global(.shepherd-button-secondary) {
     background: transparent !important;
-    color: var(--theme-text-muted) !important;
+    color: var(--theme-text-1) !important;
     border: 1px solid var(--theme-border-subtle) !important;
   }
 
   :global(.shepherd-button-secondary:hover) {
     background: var(--color-base-200) !important;
     color: var(--theme-text-1) !important;
+    box-shadow: none;
+  }
+
+  /* Skip tour: a plain text link pushed to the far left of the footer, away
+     from Back / Next, so it is not hit by mistake. */
+  :global(.shepherd-footer .shepherd-button-skip) {
+    margin-right: auto !important;
+    background: transparent !important;
+    color: var(--theme-text-1) !important;
+    font-weight: 500 !important;
+    padding-left: 0.25rem !important;
+    padding-right: 0.25rem !important;
+  }
+
+  :global(.shepherd-footer .shepherd-button-skip:hover) {
+    background: transparent !important;
+    text-decoration: underline;
+    box-shadow: none;
   }
 
   /* The Backdrop (Dimming effect) */
