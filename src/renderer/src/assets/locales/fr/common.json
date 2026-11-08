@@ -1725,5 +1725,11 @@
   "Delete items": "Supprimer les elements",
   "Delete this item?": "Supprimer cet element ?",
   "Delete selected items?": "Supprimer les elements selectionnes ?",
-  "(Double click to edit)": "(Double click to edit)"
+  "(Double click to edit)": "(Double click to edit)",
+  "Appearance": "Apparence",
+  "Automatic": "Automatique",
+  "Light": "Clair",
+  "Dark": "Sombre",
+  "Switch theme": "Changer de thème",
+  "Grid": "Grille"
 }

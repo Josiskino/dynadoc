@@ -1725,5 +1725,11 @@
   "Delete items": "項目を削除",
   "Delete this item?": "この項目を削除しますか？",
   "Delete selected items?": "選択した項目を削除しますか？",
-  "(Double click to edit)": "(Double click to edit)"
+  "(Double click to edit)": "(Double click to edit)",
+  "Appearance": "外観",
+  "Automatic": "自動",
+  "Light": "ライト",
+  "Dark": "ダーク",
+  "Switch theme": "テーマを切り替え",
+  "Grid": "グリッド"
 }

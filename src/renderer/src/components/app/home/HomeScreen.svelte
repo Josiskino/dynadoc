@@ -27,6 +27,7 @@
   import type { DocumentContentType } from '../../../models/Document'
   import { DocumentModel } from '../../../models/Document'
   import { nodeApi } from '../../../utils/shims/node'
+  import HomeHeaderPrefs from './components/HomeHeaderPrefs.svelte'
 
   const ENTRY_FILE_NAMES = new Set(['index.html', 'index.sddoc', 'index.md'])
   function documentDisplayName(filePath: string): string {
@@ -550,6 +551,41 @@
     el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
+  // Onglet actif de la navigation : la section cliquée, puis celle qui passe
+  // sous l'en-tête pendant le défilement. Le clic l'emporte le temps du
+  // défilement doux qu'il déclenche.
+  type NavSection = 'top' | 'recent' | 'shared'
+  let activeSection = $state<NavSection>('top')
+  let scrollBody: HTMLDivElement | undefined = $state()
+  let navLockUntil = 0
+
+  function goToSection(id: NavSection) {
+    activeSection = id
+    navLockUntil = Date.now() + 700
+    scrollToSection(id)
+  }
+
+  $effect(() => {
+    const body = scrollBody
+    if (!body) return
+    const onScroll = () => {
+      if (Date.now() < navLockUntil) return
+      const limit = body.getBoundingClientRect().top + 120
+      let current: NavSection = 'top'
+      let best = -Infinity
+      for (const id of ['top', 'recent', 'shared'] as const) {
+        const top = document.getElementById(id)?.getBoundingClientRect().top
+        if (top !== undefined && top <= limit && top > best) {
+          best = top
+          current = id
+        }
+      }
+      activeSection = current
+    }
+    body.addEventListener('scroll', onScroll, { passive: true })
+    return () => body.removeEventListener('scroll', onScroll)
+  })
+
   function openSecondaryPanel(id: string) {
     _$_activeSecondarySidebarItem.set(id as any)
     _$_secondarySidebarVisible.set(true)
@@ -615,9 +651,16 @@
        respire. Les libellés deviennent title + aria-label ; les cibles
        gardent 44 px. -->
   <aside
-    class="w-[68px] shrink-0 border-r border-base-300 bg-base-200 flex flex-col items-center gap-4 py-5 transition-colors"
+    class="w-[68px] shrink-0 border-r border-base-300 bg-base-200 flex flex-col items-center gap-4 pb-5 transition-colors"
   >
-    <img src={brandMark} alt="dynadoc" class="h-9 w-auto" />
+    <!-- Le logo occupe une bande de la hauteur de l'en-tête, fermée par la
+         même bordure : la ligne court de l'en-tête jusqu'au rail, et la
+         navigation démarre en dessous au lieu de coller au logo. -->
+    <div
+      class="h-[68px] w-full shrink-0 flex items-center justify-center border-b border-base-300 mb-1"
+    >
+      <img src={brandMark} alt="dynadoc" class="h-9 w-auto" />
+    </div>
 
     <nav class="flex flex-col gap-1.5">
       {#each sidebarNav.filter((n) => n.group === 'main') as item}
@@ -665,41 +708,64 @@
          colonnes au-dessus de md pour que la nav soit vraiment centrée ;
          empilées en dessous, ce qui est la seule forme tenable à 400 px. -->
     <header
-      class="border-b border-base-300 grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-center gap-3 px-5 py-3 sticky top-0 bg-base-100 z-10"
+      class="border-b border-base-300 grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 px-5 py-3 md:py-0 md:h-[68px] sticky top-0 bg-base-100 z-10"
     >
-      <div class="hidden md:block"></div>
+      <div class="flex items-center min-w-0">
+        <label class="dash-search w-full md:max-w-[280px]">
+          <i class="dash-search__icon ph-light ph-magnifying-glass text-[15px]" aria-hidden="true"
+          ></i>
+          <input
+            type="text"
+            placeholder={$_('Search...')}
+            title={$_('Search files, templates, people...')}
+            aria-label={$_('Search files, templates, people...')}
+            class="dash-search__input"
+            bind:value={searchQuery}
+          />
+        </label>
+      </div>
 
       <nav class="dash-nav justify-self-center">
-        <button class="dash-nav-item" on:click={() => scrollToSection('top')}>
+        <button
+          class="dash-nav-item"
+          class:dash-nav-item--on={activeSection === 'top'}
+          aria-current={activeSection === 'top' ? 'true' : undefined}
+          on:click={() => goToSection('top')}
+        >
+          <i class="ph-light ph-squares-four text-[15px]" aria-hidden="true"></i>
           {$_('Dashboard')}
         </button>
-        <button class="dash-nav-item" on:click={() => scrollToSection('recent')}>
+        <button
+          class="dash-nav-item"
+          class:dash-nav-item--on={activeSection === 'recent'}
+          aria-current={activeSection === 'recent' ? 'true' : undefined}
+          on:click={() => goToSection('recent')}
+        >
+          <i class="ph-light ph-files text-[15px]" aria-hidden="true"></i>
           {$_('Documents')}
         </button>
-        <button class="dash-nav-item" on:click={() => scrollToSection('shared')}>
+        <button
+          class="dash-nav-item"
+          class:dash-nav-item--on={activeSection === 'shared'}
+          aria-current={activeSection === 'shared' ? 'true' : undefined}
+          on:click={() => goToSection('shared')}
+        >
+          <i class="ph-light ph-share-network text-[15px]" aria-hidden="true"></i>
           {$_('Shared')}
         </button>
         <button class="dash-nav-item" on:click={goToNewDocumentScreen}>
+          <i class="ph-light ph-layout text-[15px]" aria-hidden="true"></i>
           {$_('Templates')}
         </button>
       </nav>
 
-      <div class="flex items-center gap-2 md:justify-self-end">
-        <div
-          class="flex items-center bg-base-200 rounded-full px-3.5 h-9 flex-grow md:flex-grow-0 focus-within:ring-1 focus-within:ring-primary transition-all"
-        >
-          <i class="ph-light ph-magnifying-glass opacity-40 text-[15px]"></i>
-          <input
-            type="text"
-            placeholder={$_('Search files, templates, people...')}
-            class="bg-transparent border-none py-1.5 pl-2 pr-1 text-sm w-full md:w-52 focus:outline-none outline-none"
-            bind:value={searchQuery}
-          />
-        </div>
+      <!-- Langue et thème à droite ; la recherche est passée à gauche. -->
+      <div class="flex items-center justify-end min-w-0">
+        <HomeHeaderPrefs />
       </div>
     </header>
 
-    <div class="p-8 overflow-y-auto">
+    <div class="p-8 overflow-y-auto" bind:this={scrollBody}>
       {#if searchQuery.trim().length >= 2}
         <section class="mb-10">
           <div class="flex items-center justify-between mb-4">
@@ -745,7 +811,7 @@
       <!-- Le teal n'habille qu'une seule chose : Reprendre. Tout le reste est
            neutre ou porte la teinte de son type de document. -->
       <section id="top" class="mb-8">
-        <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <div class="flex flex-wrap items-stretch justify-between gap-4 mb-6">
           <div class="min-w-0">
             <h2 class="text-[28px] font-semibold tracking-tight leading-tight">
               {$_('Dashboard')}
@@ -755,17 +821,21 @@
           {#if !isPremiumPlan}
             <!-- Le plan tient sur une ligne, à droite du titre : visible sans
                  occuper une rangée du tableau de bord. -->
-            <div class="dash-planline max-w-full">
-              <span class="text-sm font-semibold">{$_('Pilot plan')}</span>
-              <span class="text-sm text-base-content/60 flex-1 min-w-0">
-                {$_('Free during the pilot.')}
-              </span>
-              <button
-                class="dash-outline dash-outline--sm shrink-0"
-                on:click={() => openUpgradePlanModal({ source: 'home', highlight: 'pro' })}
-              >
-                {$_('Compare plans')}
-              </button>
+            <div class="dash-plan">
+              <div class="dash-plan__row">
+                <span class="dash-plan__badge">
+                  <i class="ph-light ph-rocket-launch text-[14px]" aria-hidden="true"></i>
+                  {$_('Pilot plan')}
+                </span>
+                <button
+                  class="dash-plan__link"
+                  on:click={() => openUpgradePlanModal({ source: 'home', highlight: 'pro' })}
+                >
+                  <span class="dash-plan__label">{$_('Compare plans')}</span>
+                  <i class="ph-light ph-arrow-right text-[13px]" aria-hidden="true"></i>
+                </button>
+              </div>
+              <span class="text-sm text-base-content/60">{$_('Free during the pilot.')}</span>
             </div>
           {/if}
         </div>
@@ -776,6 +846,7 @@
           {#each quickCreate as item}
             <button
               class="dash-create"
+              data-kind={item.id}
               style="--tile:{item.color}; --tint:{item.tint}"
               on:click={() => handleCreate(item.id)}
             >
@@ -951,11 +1022,14 @@
                 {$_('Open shared link')}
               </button>
             </div>
-            <p class="text-sm text-base-content/60">
-              {$_(
-                'Collaborations and shared links appear here. Paste a shared link to open a live document.'
-              )}
-            </p>
+            <div class="dash-empty">
+              <i class="ph-light ph-users-three text-2xl opacity-40" aria-hidden="true"></i>
+              <p class="text-xs text-base-content/60 mt-2 max-w-[320px] mx-auto">
+                {$_(
+                  'Collaborations and shared links appear here. Paste a shared link to open a live document.'
+                )}
+              </p>
+            </div>
           </section>
 
           <!-- Documents cloud : un résumé par lecteur, dans le langage des
@@ -1051,27 +1125,37 @@
             <h2 class="text-lg font-bold tracking-tight">{$_('Documents')}</h2>
             <div class="flex items-center gap-2">
               <button
-                class="btn btn-xs btn-ghost"
-                class:opacity-60={!showPinnedOnly}
+                class="dash-toggle"
+                class:dash-toggle--on={showPinnedOnly}
+                aria-pressed={showPinnedOnly}
                 on:click={() => (showPinnedOnly = !showPinnedOnly)}
               >
-                <i class="ph-light ph-push-pin mr-1"></i>
+                <i
+                  class="{showPinnedOnly ? 'ph-bold' : 'ph-light'} ph-push-pin text-[14px]"
+                  aria-hidden="true"
+                ></i>
                 {$_('Pinned')}
               </button>
-              <div class="join border border-base-200">
+              <div class="dash-seg">
                 <button
-                  class="join-item btn btn-xs btn-ghost"
-                  class:active={viewMode === 'list'}
+                  class="dash-seg__item"
+                  class:dash-seg__item--on={viewMode === 'list'}
+                  aria-pressed={viewMode === 'list'}
+                  aria-label={$_('List')}
+                  title={$_('List')}
                   on:click={() => (viewMode = 'list')}
                 >
-                  <i class="ph-light ph-list"></i>
+                  <i class="ph-light ph-list text-[15px]" aria-hidden="true"></i>
                 </button>
                 <button
-                  class="join-item btn btn-xs btn-ghost"
-                  class:active={viewMode === 'grid'}
+                  class="dash-seg__item"
+                  class:dash-seg__item--on={viewMode === 'grid'}
+                  aria-pressed={viewMode === 'grid'}
+                  aria-label={$_('Grid')}
+                  title={$_('Grid')}
                   on:click={() => (viewMode = 'grid')}
                 >
-                  <i class="ph-light ph-squares-four"></i>
+                  <i class="ph-light ph-squares-four text-[15px]" aria-hidden="true"></i>
                 </button>
               </div>
             </div>
@@ -1139,9 +1223,9 @@
                         <td class="text-right">
                           <button class="btn btn-ghost btn-xs" on:click={() => togglePin(file)}>
                             <i
-                              class="ph-light {pinnedIds.includes(file.id)
-                                ? 'ph-push-pin-fill text-primary'
-                                : 'ph-push-pin'}"
+                              class="{pinnedIds.includes(file.id)
+                                ? 'ph-bold text-[--accent-text]'
+                                : 'ph-light'} ph-push-pin"
                             ></i>
                           </button>
                         </td>
@@ -1200,9 +1284,9 @@
                     </div>
                     <button class="btn btn-ghost btn-xs" on:click={() => togglePin(file)}>
                       <i
-                        class="ph-light {pinnedIds.includes(file.id)
-                          ? 'ph-push-pin-fill text-primary'
-                          : 'ph-push-pin'}"
+                        class="{pinnedIds.includes(file.id)
+                          ? 'ph-bold text-[--accent-text]'
+                          : 'ph-light'} ph-push-pin"
                       ></i>
                     </button>
                   </div>
