@@ -213,6 +213,14 @@
   .plan-badge {
     @apply text-[8px] font-900 uppercase tracking-widest px-2 py-0.5 rd-[2px] bg-[var(--color-base-300)] text-black;
   }
+  /* Valeurs que ce bloc recevait jusqu'ici de la feuille du splash
+     (index.html) qui fuyait sur toute l'application ; fixées ici pour que
+     le rendu ne change pas une fois cette fuite corrigée. Sans elles,
+     daisyUI donne 24 px et 8 px. */
+  .card-body {
+    padding: 12px 12px 0;
+    gap: 5px;
+  }
   .plan-summary {
     @apply text-[13px] leading-relaxed h-12;
     color: rgba(var(--theme-text-rgb), 0.58);
