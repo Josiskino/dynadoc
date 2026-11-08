@@ -559,7 +559,7 @@
   let scrollBody: HTMLDivElement | undefined = $state()
   let navLockUntil = 0
 
-  function goToSection(id: NavSection) {
+  function goToSection(id: NavSection): void {
     activeSection = id
     navLockUntil = Date.now() + 700
     scrollToSection(id)
@@ -568,7 +568,7 @@
   $effect(() => {
     const body = scrollBody
     if (!body) return
-    const onScroll = () => {
+    const onScroll = (): void => {
       if (Date.now() < navLockUntil) return
       const limit = body.getBoundingClientRect().top + 120
       let current: NavSection = 'top'

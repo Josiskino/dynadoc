@@ -48,7 +48,7 @@
     <svelte:fragment slot="content">
       <div class="pref-menu" role="menu">
         <div class="pref-menu__title">{$_('Language')}</div>
-        {#each languageOptions as lang}
+        {#each languageOptions as lang (lang.code)}
           <button
             class="pref-item"
             class:pref-item--on={currentLocale === lang.code}
@@ -81,7 +81,7 @@
     <svelte:fragment slot="content">
       <div class="pref-menu" role="menu">
         <div class="pref-menu__title">{$_('Appearance')}</div>
-        {#each themeOptions as option}
+        {#each themeOptions as option (option.mode)}
           <button
             class="pref-item"
             class:pref-item--on={themeMode === option.mode}

@@ -110,7 +110,7 @@
     </div>
   {:else if compact}
     <div class="flex flex-col divide-y divide-base-200">
-      {#each driveSources as source}
+      {#each driveSources as source (source.orgKey)}
         <DriveAccountPanel
           compact
           accountOrg={source.orgKey}
