@@ -1,17 +1,33 @@
 <script lang="ts">
   import 'shepherd.js/dist/css/shepherd.css'
+  import { onMount } from 'svelte'
   // ShepherdTourWrapper.svelte
   let {
     __title = '',
     StepComponent,
+    previousStep = undefined,
     currentStep = 1,
-    totalSteps = 5
+    totalSteps = 1
   } = $props<{
     __title?: string
     StepComponent: any
+    previousStep?: number
     currentStep?: number
     totalSteps?: number
   }>()
+
+  // Render the previous step first, then move to the current one on the
+  // next frame so the width/colour transition actually plays. Reading the
+  // props once is intended: each tour step mounts its own wrapper.
+  // svelte-ignore state_referenced_locally
+  let shownStep = $state(previousStep ?? currentStep)
+
+  onMount(() => {
+    let frame = requestAnimationFrame(() => {
+      frame = requestAnimationFrame(() => (shownStep = currentStep))
+    })
+    return () => cancelAnimationFrame(frame)
+  })
 </script>
 
 <div class="overflow-auto">
@@ -31,7 +47,8 @@
     <div class="flex items-center gap-1">
       {#each Array(totalSteps) as _, i}
         <div
-          class="h-1 rd-full transition-all duration-300 {i < currentStep
+          class="h-1 rd-full transition-all duration-500 ease-out motion-reduce:transition-none {i <
+          shownStep
             ? 'w-4 bg-primary'
             : 'w-1 bg-base-content/10'}"
         ></div>

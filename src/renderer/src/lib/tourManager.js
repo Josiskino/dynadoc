@@ -91,10 +91,17 @@ function addSvelteStep(tour, StepComponent, options, componentProps = {}) {
     when: {
       show() {
         const step = this
+        const currentStep = tour.steps.indexOf(step) + 1
         mountIntoStep(step, ShepherdTourWrapper, {
           ...componentProps,
-          StepComponent
+          StepComponent,
+          // Each step mounts a fresh wrapper; starting from the previous
+          // step lets the progress indicator animate instead of jumping.
+          previousStep: tour.__ddocLastStep ?? currentStep,
+          currentStep,
+          totalSteps: tour.steps.length
         })
+        tour.__ddocLastStep = currentStep
         try {
           userWhen.show?.call(this)
         } catch {
@@ -116,7 +123,7 @@ function addSvelteStep(tour, StepComponent, options, componentProps = {}) {
         } catch {
           // ignore
         }
-      },
+      }
       // do not spread `options.when` to avoid clobbering the Svelte bridge
     }
   })
@@ -239,8 +246,7 @@ export function startEditorTour() {
       id: 'editor-dev-tools',
       attachTo: { element: '.editor-controls', on: 'bottom' },
       advanceOn: {
-        selector:
-          '.code-editor-toggle, .code-editor-toggle *, .console-toggle, .console-toggle *',
+        selector: '.code-editor-toggle, .code-editor-toggle *, .console-toggle, .console-toggle *',
         event: 'click'
       },
       buttons: []
