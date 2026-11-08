@@ -597,7 +597,7 @@
 </script>
 
 <div
-  class="brand-ui flex min-h-screen bg-base-100 text-base-content font-sans selection:bg-primary/20 transition-colors duration-200"
+  class="brand-ui flex h-full bg-base-100 text-base-content font-sans selection:bg-primary/20 transition-colors duration-200"
 >
   <!-- Rail d'icônes : la navigation tient en 68 px au lieu de 232, le contenu
        respire. Les libellés deviennent title + aria-label ; les cibles
