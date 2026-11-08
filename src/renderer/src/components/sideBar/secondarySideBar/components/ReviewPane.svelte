@@ -302,7 +302,8 @@
       {#each ['all', 'simple', 'none', 'original'] as mode}
         <button
           class="text-[8px] font-900 py-1 rd-1px transition-all"
-          class:bg-[color-mix(in_srgb,var(--color-base-white)_100%,transparent)]={markupMode === mode}
+          class:bg-[color-mix(in_srgb,var(--color-base-white)_100%,transparent)]={markupMode ===
+            mode}
           class:text-black={markupMode === mode}
           class:opacity-30={markupMode !== mode}
           onclick={() => setMarkup(mode as any)}
@@ -486,6 +487,10 @@
 
   .card-body {
     @apply flex-1 p-3 min-w-0;
+    /* Écart reçu jusqu'ici de la feuille du splash (index.html), fixé ici
+       pour que le rendu ne change pas une fois cette fuite corrigée ;
+       daisyUI donnerait 8 px. */
+    gap: 5px;
   }
 
   .type-tag {
