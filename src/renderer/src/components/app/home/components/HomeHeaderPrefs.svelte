@@ -45,7 +45,7 @@
       <i class="ph-light ph-translate text-[16px]" aria-hidden="true"></i>
       <span class="pref-btn__code">{currentLocale.toUpperCase()}</span>
     </button>
-    <svelte:fragment slot="content">
+    <svelte:fragment slot="content" let:closeContextMenu>
       <div class="pref-menu" role="menu">
         <div class="pref-menu__title">{$_('Language')}</div>
         {#each languageOptions as lang (lang.code)}
@@ -54,7 +54,10 @@
             class:pref-item--on={currentLocale === lang.code}
             role="menuitemradio"
             aria-checked={currentLocale === lang.code}
-            onclick={() => setLocale(lang.code)}
+            onclick={() => {
+              setLocale(lang.code)
+              closeContextMenu()
+            }}
           >
             <span aria-hidden="true">{getFlagEmoji(lang.code)}</span>
             <span class="flex-1 min-w-0 truncate">{$_(lang.labelKey)}</span>
@@ -78,7 +81,7 @@
     >
       <i class="ph-light {themeIcon} text-[16px]" aria-hidden="true"></i>
     </button>
-    <svelte:fragment slot="content">
+    <svelte:fragment slot="content" let:closeContextMenu>
       <div class="pref-menu" role="menu">
         <div class="pref-menu__title">{$_('Appearance')}</div>
         {#each themeOptions as option (option.mode)}
@@ -87,7 +90,10 @@
             class:pref-item--on={themeMode === option.mode}
             role="menuitemradio"
             aria-checked={themeMode === option.mode}
-            onclick={() => _$_themeMode.set(option.mode)}
+            onclick={() => {
+              _$_themeMode.set(option.mode)
+              closeContextMenu()
+            }}
           >
             <i class="ph-light {option.icon} text-[15px]" aria-hidden="true"></i>
             <span class="flex-1 min-w-0 truncate">{$_(themeLabelKeys[option.mode])}</span>
