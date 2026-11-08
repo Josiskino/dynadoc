@@ -29,9 +29,12 @@
   // Start at the previous step's height, then ease to this step's own
   // height and hand back to auto, so the popover does not jump on Next/Back.
   function animateHeightFrom(from: number | undefined): void {
-    if (!root || !from) return
+    // === undefined rather than !from: a measured 0 must not fail silently.
+    if (!root || from === undefined) return
     if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
-    const to = root.scrollHeight
+    // offsetHeight, not scrollHeight: the body's slide-in starts at
+    // translateY(8px), which scrollHeight counts as 8 px of overflow.
+    const to = root.offsetHeight
     if (Math.abs(to - from) < 2) return
 
     const el = root

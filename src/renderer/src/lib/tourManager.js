@@ -111,9 +111,13 @@ function addSvelteStep(tour, StepComponent, options, componentProps = {}) {
           // ignore
         }
       },
-      hide() {
-        // Read before cleanup removes the host: the next step animates from it.
+      'before-hide'() {
+        // Measured here, not in hide(): Shepherd sets el.hidden = true just
+        // before emitting 'hide', so the element reads 0 there. The next step
+        // animates from this height.
         tour.__ddocLastHeight = this.__ddocSvelte?.host?.offsetHeight
+      },
+      hide() {
         cleanupStepSvelte(this)
         try {
           userWhen.hide?.call(this)
