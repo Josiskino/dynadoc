@@ -665,7 +665,7 @@
          colonnes au-dessus de md pour que la nav soit vraiment centrée ;
          empilées en dessous, ce qui est la seule forme tenable à 400 px. -->
     <header
-      class="border-b border-base-200 grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-center gap-3 px-5 py-3 sticky top-0 bg-base-100/85 backdrop-blur-md z-10"
+      class="border-b border-base-300 grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-center gap-3 px-5 py-3 sticky top-0 bg-base-100 z-10"
     >
       <div class="hidden md:block"></div>
 
