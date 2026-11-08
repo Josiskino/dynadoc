@@ -72,7 +72,7 @@
   <!-- Fonctionnalités : une grille régulière, la dernière sur toute la
        largeur. Titres en casse normale et textes lisibles (12 px, 70 %). -->
   <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-    {#each features as feature, i}
+    {#each features as feature, i (feature.title)}
       <div
         class="welcome-feature flex items-start gap-3 p-3 rd-xl border border-[--theme-border-subtle] {i ===
         features.length - 1
