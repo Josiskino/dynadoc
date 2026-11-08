@@ -365,20 +365,22 @@
 
 .dash-card {
   background: var(--color-base-100);
-  border: 1px solid var(--color-base-200);
-  border-radius: 22px;
+  /* --color-base-300 (= --line) et non base-200 : base-200 donnait 1,09:1
+     contre le fond blanc, la bordure ne se voyait pas. */
+  border: 1px solid var(--color-base-300);
+  border-radius: 14px;
   padding: 20px;
+  box-shadow: 0 1px 2px rgb(16 24 40 / 0.04);
 }
 
 .dash-create {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 11px;
   min-width: 0;
-  padding: 16px 10px 14px;
-  border-radius: 18px;
-  border: 1px solid var(--color-base-200);
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--color-base-300);
   background: var(--color-base-100);
   color: var(--color-base-content);
   font: inherit;
@@ -395,9 +397,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
   background: var(--tint);
   color: var(--tile);
   transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
@@ -406,9 +409,10 @@
 /* Au survol, la tuile prend la teinte de son type et se soulève un peu ;
    l'icône suit. Couleur et mouvement restent ceux du type, pas l'accent. */
 .dash-create:hover {
-  transform: translateY(-2px);
+  transform: translateY(-1px);
   background: var(--tint);
-  border-color: color-mix(in srgb, var(--tile) 35%, transparent);
+  border-color: color-mix(in srgb, var(--tile) 40%, transparent);
+  box-shadow: 0 4px 12px -4px color-mix(in srgb, var(--tile) 35%, transparent);
 }
 
 .dash-create:hover .dash-create__icon {
@@ -496,7 +500,7 @@
   gap: 6px;
   min-height: 40px;
   padding: 10px 15px;
-  border: 1px solid var(--color-base-200);
+  border: 1px solid var(--color-base-300);
   border-radius: 999px;
   background: transparent;
   color: var(--color-base-content);
@@ -519,7 +523,7 @@
 .dash-ghost-round {
   width: 34px;
   height: 34px;
-  border: 1px solid var(--color-base-200);
+  border: 1px solid var(--color-base-300);
   border-radius: 50%;
   background: transparent;
   color: var(--color-base-content);
@@ -529,7 +533,7 @@
 }
 
 .dash-ghost-round:hover {
-  border-color: var(--color-base-300);
+  border-color: color-mix(in srgb, var(--color-base-content) 30%, transparent);
 }
 
 .dash-row {
@@ -568,9 +572,9 @@
 }
 
 .dash-empty {
-  border-radius: 18px;
+  border-radius: 12px;
   background: var(--color-base-200);
-  padding: 30px 20px;
+  padding: 22px 16px;
   text-align: center;
 }
 
@@ -578,9 +582,10 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
-  padding: 14px 18px;
-  border: 1px solid var(--color-base-200);
+  gap: 10px;
+  padding: 4px 4px 4px 14px;
+  border: 1px solid var(--color-base-300);
+  background: var(--color-base-100);
   border-radius: 999px;
 }
 

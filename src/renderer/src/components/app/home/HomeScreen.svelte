@@ -615,7 +615,7 @@
        respire. Les libellés deviennent title + aria-label ; les cibles
        gardent 44 px. -->
   <aside
-    class="w-[68px] shrink-0 border-r border-base-200 bg-base-200 flex flex-col items-center gap-4 py-5 transition-colors"
+    class="w-[68px] shrink-0 border-r border-base-300 bg-base-200 flex flex-col items-center gap-4 py-5 transition-colors"
   >
     <img src={brandMark} alt="dynadoc" class="h-9 w-auto" />
 
@@ -660,7 +660,7 @@
     </button>
   </aside>
 
-  <main class="flex-grow flex flex-col min-w-0 bg-base-100">
+  <main class="flex-grow flex flex-col min-w-0 bg-base-200">
     <!-- Navigation courte et centrée, recherche et réglages à droite. Trois
          colonnes au-dessus de md pour que la nav soit vraiment centrée ;
          empilées en dessous, ce qui est la seule forme tenable à 400 px. -->
@@ -745,27 +745,29 @@
       <!-- Le teal n'habille qu'une seule chose : Reprendre. Tout le reste est
            neutre ou porte la teinte de son type de document. -->
       <section id="top" class="mb-8">
-        <div class="flex flex-wrap items-end justify-between gap-4 mb-6">
+        <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
           <div class="min-w-0">
-            <h2 class="text-[34px] font-light tracking-tight leading-none">{$_('Dashboard')}</h2>
-            <p class="text-sm text-base-content/60 mt-2">{$_('Pick up where you left off.')}</p>
-            {#if !isPremiumPlan}
-              <!-- Le plan tient sur une ligne, sous le titre : visible sans
-                   occuper une rangée entière du tableau de bord. -->
-              <div class="dash-planline w-fit max-w-full mt-4">
-                <span class="text-sm font-semibold">{$_('Pilot plan')}</span>
-                <span class="text-sm text-base-content/60 flex-1 min-w-0">
-                  {$_('Free during the pilot.')}
-                </span>
-                <button
-                  class="dash-outline dash-outline--sm shrink-0"
-                  on:click={() => openUpgradePlanModal({ source: 'home', highlight: 'pro' })}
-                >
-                  {$_('Compare plans')}
-                </button>
-              </div>
-            {/if}
+            <h2 class="text-[28px] font-semibold tracking-tight leading-tight">
+              {$_('Dashboard')}
+            </h2>
+            <p class="text-sm text-base-content/60 mt-1">{$_('Pick up where you left off.')}</p>
           </div>
+          {#if !isPremiumPlan}
+            <!-- Le plan tient sur une ligne, à droite du titre : visible sans
+                 occuper une rangée du tableau de bord. -->
+            <div class="dash-planline max-w-full">
+              <span class="text-sm font-semibold">{$_('Pilot plan')}</span>
+              <span class="text-sm text-base-content/60 flex-1 min-w-0">
+                {$_('Free during the pilot.')}
+              </span>
+              <button
+                class="dash-outline dash-outline--sm shrink-0"
+                on:click={() => openUpgradePlanModal({ source: 'home', highlight: 'pro' })}
+              >
+                {$_('Compare plans')}
+              </button>
+            </div>
+          {/if}
         </div>
 
         <!-- Créer : une tuile par type, teintée de la couleur du type. Les
@@ -1076,7 +1078,7 @@
           </div>
 
           {#if viewMode === 'list'}
-            <div class="overflow-x-auto border border-base-200 rounded-sm bg-base-100 shadow-sm">
+            <div class="dash-card !p-0 overflow-x-auto">
               <table class="table table-compact w-full">
                 <thead class="bg-base-200 border-b border-base-200">
                   <tr class="text-[10px] uppercase tracking-widest opacity-60 font-black">
