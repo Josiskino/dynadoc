@@ -28,7 +28,7 @@
 
   // Start at the previous step's height, then ease to this step's own
   // height and hand back to auto, so the popover does not jump on Next/Back.
-  function animateHeightFrom(from: number | undefined) {
+  function animateHeightFrom(from: number | undefined): void {
     if (!root || !from) return
     if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
     const to = root.scrollHeight
@@ -41,7 +41,7 @@
     el.style.transition = 'height 320ms cubic-bezier(0.22, 1, 0.36, 1)'
     el.style.height = `${to}px`
 
-    const release = (event: TransitionEvent) => {
+    const release = (event: TransitionEvent): void => {
       if (event.target !== el || event.propertyName !== 'height') return
       el.removeEventListener('transitionend', release)
       el.style.height = ''
