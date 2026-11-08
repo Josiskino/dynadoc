@@ -98,6 +98,9 @@ function addSvelteStep(tour, StepComponent, options, componentProps = {}) {
           // Each step mounts a fresh wrapper; starting from the previous
           // step lets the progress indicator animate instead of jumping.
           previousStep: tour.__ddocLastStep ?? currentStep,
+          // Same reason for the height: the new popover starts at the
+          // previous step's height and grows or shrinks to its own.
+          previousHeight: tour.__ddocLastHeight,
           currentStep,
           totalSteps: tour.steps.length
         })
@@ -107,6 +110,12 @@ function addSvelteStep(tour, StepComponent, options, componentProps = {}) {
         } catch {
           // ignore
         }
+      },
+      'before-hide'() {
+        // Measured here, not in hide(): Shepherd sets el.hidden = true just
+        // before emitting 'hide', so the element reads 0 there. The next step
+        // animates from this height.
+        tour.__ddocLastHeight = this.__ddocSvelte?.host?.offsetHeight
       },
       hide() {
         cleanupStepSvelte(this)

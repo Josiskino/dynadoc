@@ -6,12 +6,14 @@
     __title = '',
     StepComponent,
     previousStep = undefined,
+    previousHeight = undefined,
     currentStep = 1,
     totalSteps = 1
   } = $props<{
     __title?: string
     StepComponent: any
     previousStep?: number
+    previousHeight?: number
     currentStep?: number
     totalSteps?: number
   }>()
@@ -22,7 +24,38 @@
   // svelte-ignore state_referenced_locally
   let shownStep = $state(previousStep ?? currentStep)
 
+  let root: HTMLDivElement | undefined = $state()
+
+  // Start at the previous step's height, then ease to this step's own
+  // height and hand back to auto, so the popover does not jump on Next/Back.
+  function animateHeightFrom(from: number | undefined): void {
+    // === undefined rather than !from: a measured 0 must not fail silently.
+    if (!root || from === undefined) return
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
+    // offsetHeight, not scrollHeight: the body's slide-in starts at
+    // translateY(8px), which scrollHeight counts as 8 px of overflow.
+    const to = root.offsetHeight
+    if (Math.abs(to - from) < 2) return
+
+    const el = root
+    el.style.height = `${from}px`
+    el.style.overflow = 'hidden'
+    void el.offsetHeight // commit the start height before transitioning
+    el.style.transition = 'height 320ms cubic-bezier(0.22, 1, 0.36, 1)'
+    el.style.height = `${to}px`
+
+    const release = (event: TransitionEvent): void => {
+      if (event.target !== el || event.propertyName !== 'height') return
+      el.removeEventListener('transitionend', release)
+      el.style.height = ''
+      el.style.overflow = ''
+      el.style.transition = ''
+    }
+    el.addEventListener('transitionend', release)
+  }
+
   onMount(() => {
+    animateHeightFrom(previousHeight)
     let frame = requestAnimationFrame(() => {
       frame = requestAnimationFrame(() => (shownStep = currentStep))
     })
@@ -30,7 +63,7 @@
   })
 </script>
 
-<div class="overflow-auto">
+<div class="overflow-auto" bind:this={root}>
   <!-- <div class="min-w-[300px] max-w-[400px] overflow-hidden"> -->
   <!-- Adobe-style Header: High Density Info -->
   <div class="flex items-center justify-between mb-4 border-b border-[--theme-border-subtle] pb-2">
