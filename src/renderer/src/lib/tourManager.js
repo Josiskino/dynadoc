@@ -98,6 +98,9 @@ function addSvelteStep(tour, StepComponent, options, componentProps = {}) {
           // Each step mounts a fresh wrapper; starting from the previous
           // step lets the progress indicator animate instead of jumping.
           previousStep: tour.__ddocLastStep ?? currentStep,
+          // Same reason for the height: the new popover starts at the
+          // previous step's height and grows or shrinks to its own.
+          previousHeight: tour.__ddocLastHeight,
           currentStep,
           totalSteps: tour.steps.length
         })
@@ -109,6 +112,8 @@ function addSvelteStep(tour, StepComponent, options, componentProps = {}) {
         }
       },
       hide() {
+        // Read before cleanup removes the host: the next step animates from it.
+        tour.__ddocLastHeight = this.__ddocSvelte?.host?.offsetHeight
         cleanupStepSvelte(this)
         try {
           userWhen.hide?.call(this)
