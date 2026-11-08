@@ -351,7 +351,7 @@
   border: 0;
   background: transparent;
   border-radius: 7px;
-  padding: 6px 12px;
+  padding: 8px 14px;
   font: inherit;
   font-size: 13px;
   font-weight: 500;
@@ -452,7 +452,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 32px;
+  height: 34px;
   padding: 0 11px;
   border-radius: 8px;
   border: 1px solid var(--color-base-300);
@@ -493,8 +493,8 @@
 .dash-seg__item {
   display: grid;
   place-items: center;
-  width: 30px;
-  height: 26px;
+  width: 34px;
+  height: 30px;
   border: 0;
   border-radius: 6px;
   background: transparent;
@@ -565,11 +565,13 @@
   width: 34px;
   height: 34px;
   border-radius: 10px;
-  /* Neutre au repos : six couleurs vives côte à côte chargeaient le haut du
-     tableau de bord. La couleur du type n'arrive qu'au survol ou au focus. */
-  background: var(--color-base-100);
-  border: 1px solid var(--color-base-300);
-  color: color-mix(in srgb, var(--color-base-content) 55%, transparent);
+  /* La couleur du type sur l'icône et son fond, dès le repos : la rangée se
+     lit d'un coup d'œil. Le libellé garde la couleur de texte normale :
+     en texte sur blanc, le vert (3,54:1) et l'orange (4,26:1) passeraient
+     sous 4,5:1 ; en icône, les six dépassent 3:1. */
+  background: var(--tint);
+  border: 1px solid color-mix(in srgb, var(--tile) 20%, transparent);
+  color: var(--tile);
   transition:
     transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
     background-color 180ms ease,
@@ -816,8 +818,9 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  min-height: 36px;
-  padding: 8px 16px;
+  /* 44 px : la taille de cible d'origine, gardée malgré le rayon réduit. */
+  min-height: 44px;
+  padding: 11px 20px;
   border: 0;
   border-radius: 8px;
   background: var(--accent);
@@ -836,8 +839,8 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-height: 36px;
-  padding: 8px 14px;
+  min-height: 40px;
+  padding: 10px 15px;
   border: 1px solid var(--color-base-300);
   border-radius: 8px;
   background: transparent;
@@ -853,15 +856,15 @@
 }
 
 .dash-outline--sm {
-  min-height: 30px;
-  padding: 6px 11px;
+  min-height: 34px;
+  padding: 8px 13px;
   font-size: 12px;
   border-radius: 7px;
 }
 
 .dash-ghost-round {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border: 1px solid var(--color-base-300);
   /* Carré arrondi comme les boutons, plus de cercle isolé. */
   border-radius: 8px;

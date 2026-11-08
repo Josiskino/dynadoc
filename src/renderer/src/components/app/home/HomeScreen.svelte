@@ -552,16 +552,20 @@
   }
 
   // Onglet actif de la navigation : la section cliquée, puis celle qui passe
-  // sous l'en-tête pendant le défilement. Le clic l'emporte le temps du
-  // défilement doux qu'il déclenche.
+  // sous l'en-tête pendant le défilement. Les onglets suivent l'ordre de la
+  // page (Partagé est au-dessus de Documents). Le clic l'emporte jusqu'à la
+  // fin du défilement doux qu'il déclenche.
   type NavSection = 'top' | 'recent' | 'shared'
   let activeSection = $state<NavSection>('top')
   let scrollBody: HTMLDivElement | undefined = $state()
-  let navLockUntil = 0
+  let navLocked = false
 
   function goToSection(id: NavSection): void {
     activeSection = id
-    navLockUntil = Date.now() + 700
+    // Levé par scrollend ; le délai rattrape un défilement qui n'a pas lieu
+    // (section déjà en vue) ou un navigateur sans scrollend.
+    navLocked = true
+    setTimeout(() => (navLocked = false), 1200)
     scrollToSection(id)
   }
 
@@ -569,7 +573,13 @@
     const body = scrollBody
     if (!body) return
     const onScroll = (): void => {
-      if (Date.now() < navLockUntil) return
+      if (navLocked) return
+      // En bas de page, la dernière section l'emporte même si son titre ne
+      // peut pas remonter jusque sous l'en-tête.
+      if (body.scrollTop + body.clientHeight >= body.scrollHeight - 2) {
+        activeSection = 'recent'
+        return
+      }
       const limit = body.getBoundingClientRect().top + 120
       let current: NavSection = 'top'
       let best = -Infinity
@@ -582,8 +592,15 @@
       }
       activeSection = current
     }
+    const onScrollEnd = (): void => {
+      navLocked = false
+    }
     body.addEventListener('scroll', onScroll, { passive: true })
-    return () => body.removeEventListener('scroll', onScroll)
+    body.addEventListener('scrollend', onScrollEnd)
+    return () => {
+      body.removeEventListener('scroll', onScroll)
+      body.removeEventListener('scrollend', onScrollEnd)
+    }
   })
 
   function openSecondaryPanel(id: string) {
@@ -737,21 +754,21 @@
         </button>
         <button
           class="dash-nav-item"
-          class:dash-nav-item--on={activeSection === 'recent'}
-          aria-current={activeSection === 'recent' ? 'true' : undefined}
-          on:click={() => goToSection('recent')}
-        >
-          <i class="ph-light ph-files text-[15px]" aria-hidden="true"></i>
-          {$_('Documents')}
-        </button>
-        <button
-          class="dash-nav-item"
           class:dash-nav-item--on={activeSection === 'shared'}
           aria-current={activeSection === 'shared' ? 'true' : undefined}
           on:click={() => goToSection('shared')}
         >
           <i class="ph-light ph-share-network text-[15px]" aria-hidden="true"></i>
           {$_('Shared')}
+        </button>
+        <button
+          class="dash-nav-item"
+          class:dash-nav-item--on={activeSection === 'recent'}
+          aria-current={activeSection === 'recent' ? 'true' : undefined}
+          on:click={() => goToSection('recent')}
+        >
+          <i class="ph-light ph-files text-[15px]" aria-hidden="true"></i>
+          {$_('Documents')}
         </button>
         <button class="dash-nav-item" on:click={goToNewDocumentScreen}>
           <i class="ph-light ph-layout text-[15px]" aria-hidden="true"></i>
