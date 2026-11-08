@@ -1725,5 +1725,11 @@
   "Delete items": "Delete items",
   "Delete this item?": "Delete this item?",
   "Delete selected items?": "Delete selected items?",
-  "(Double click to edit)": "(Double click to edit)"
+  "(Double click to edit)": "(Double click to edit)",
+  "Appearance": "Appearance",
+  "Automatic": "Automatic",
+  "Light": "Light",
+  "Dark": "Dark",
+  "Switch theme": "Switch theme",
+  "Grid": "Grid"
 }

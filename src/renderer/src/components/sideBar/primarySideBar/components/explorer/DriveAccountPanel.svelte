@@ -12,6 +12,9 @@
     isActive?: boolean
     authenticated?: boolean
     onActivate?: ((org: string) => void) | null
+    // One summary row (name, state, counts, actions) instead of the full
+    // panel, for the home dashboard. Search and tree stay in the file manager.
+    compact?: boolean
   }
 
   // Use $props() with destructuring and default values
@@ -21,7 +24,8 @@
     accountEmail,
     isActive = $bindable(false), // Use $bindable if the parent needs to sync this state
     authenticated = false,
-    onActivate = null
+    onActivate = null,
+    compact = false
   }: Props = $props()
 
   type DriveNode = {
@@ -170,7 +174,12 @@
     console.debug('[drive] Reading drive dir', { dirPath, options })
     const items = await fetchDriveDir(dirPath, options)
     let normalized: DriveNode[] = mapDriveItems(items, dirPath)
-    console.debug('[drive] Reading drive dir', { isRoot: isRootListingPath(dirPath), options, items,normalized })
+    console.debug('[drive] Reading drive dir', {
+      isRoot: isRootListingPath(dirPath),
+      options,
+      items,
+      normalized
+    })
 
     if (isRootListingPath(dirPath) && !options.query && !query) {
       const flattened: DriveNode[] = []
@@ -269,167 +278,247 @@
       loadDriveRoot()
     }
   })
+
+  // The full panel gets its counts from the tree, which reads the root
+  // through readDriveDir. The compact row has no tree, so it reads the root
+  // itself; refreshKey re-runs it after a refresh or an upload.
+  $effect(() => {
+    if (!compact || !authenticated || !rootPath) return
+    void refreshKey
+    readDriveDir(rootPath, { sort: true }).catch((err) =>
+      console.error('Failed to read drive root', err)
+    )
+  })
 </script>
 
-<!-- Habillage seulement : tous les gestionnaires, liaisons et propriétés
-     passés à TreeView sont ceux d'avant. Ce qui change est le langage —
-     surfaces teintées au lieu de bordures dures, rayons du tableau de bord,
-     un seul accent (le lecteur actif), et des tailles de texte qui restent
-     lisibles au lieu de 8 px à 20 % d'opacité. -->
-<div class="drv-panel flex flex-col h-full font-sans select-none" class:drv-panel--on={isActive}>
-  <div class="drv-head">
+{#if compact}
+  <div class="flex items-center gap-3 py-3 font-sans select-none">
     <span class="drv-head__icon" aria-hidden="true">
       <i class="ph-light ph-hard-drive text-[15px]"></i>
     </span>
 
     <div class="min-w-0 flex-1">
-      <div class="drv-name truncate">{accountLabel || $_('Drive')}</div>
-      {#if accountEmail}
-        <div class="drv-sub truncate">{accountEmail}</div>
-      {/if}
+      <div class="flex items-center gap-2 min-w-0">
+        <span class="drv-name truncate">{accountLabel || $_('Drive')}</span>
+        <span class="drv-state shrink-0 {authenticated ? 'drv-state--on' : 'drv-state--off'}">
+          <span class="drv-state__dot" aria-hidden="true"></span>
+          {authenticated ? $_('Active') : $_('Offline')}
+        </span>
+      </div>
+      <div class="drv-sub truncate mt-0.5">
+        {#if loading}
+          {$_('Loading…')}
+        {:else if error}
+          {error}
+        {:else if rootPath}
+          {totalFolders}
+          {$_('Folders')} · {totalFiles}
+          {$_('Files')} · {toHumanSize(totalBytes)}
+        {:else}
+          {$_('Drive unavailable')}
+        {/if}
+      </div>
     </div>
 
     <div class="flex items-center gap-1 shrink-0">
-      {#if !isActive}
-        <button
-          class="drv-act"
-          title={$_('Set active')}
-          aria-label={$_('Set active')}
-          onclick={() => onActivate && onActivate(accountOrg)}
-        >
-          <i class="ph-light ph-star text-[14px]"></i>
-        </button>
-      {/if}
-      <button
-        class="drv-act"
-        title={$_('Refresh Drive')}
-        aria-label={$_('Refresh Drive')}
-        onclick={async () => {
-          await loadDriveRoot()
-          refreshTree()
-        }}
-      >
-        <i class="ph-light ph-arrows-clockwise text-[14px]"></i>
-      </button>
-    </div>
-  </div>
-
-  <div class="flex-1 overflow-y-auto no-scrollbar">
-    <div class="drv-strip">
-      <span class="drv-state {authenticated ? 'drv-state--on' : 'drv-state--off'}">
-        <span class="drv-state__dot" aria-hidden="true"></span>
-        {authenticated ? $_('Active') : $_('Offline')}
-      </span>
-
-      <span class="flex items-center gap-1.5 ml-auto shrink-0">
-        {#if !authenticated}
-          <button class="drv-signin" onclick={openAuthFlow}>{$_('Sign In')}</button>
-        {:else}
+      {#if !authenticated}
+        <button class="drv-signin" onclick={openAuthFlow}>{$_('Sign In')}</button>
+      {:else}
+        {#if !isActive}
           <button
             class="drv-act"
-            title={$_('New Folder')}
-            aria-label={$_('New Folder')}
-            onclick={createRootFolder}
+            title={$_('Set active')}
+            aria-label={$_('Set active')}
+            onclick={() => onActivate && onActivate(accountOrg)}
           >
-            <i class="ph-light ph-folder-plus text-[14px]"></i>
-          </button>
-          <button
-            class="drv-act"
-            title={$_('Upload')}
-            aria-label={$_('Upload')}
-            onclick={uploadToRoot}
-            disabled={opBusy}
-          >
-            <i class="ph-light ph-cloud-arrow-up text-[14px]"></i>
+            <i class="ph-light ph-star text-[14px]"></i>
           </button>
         {/if}
-      </span>
+        <button
+          class="drv-act"
+          title={$_('Refresh Drive')}
+          aria-label={$_('Refresh Drive')}
+          onclick={async () => {
+            await loadDriveRoot()
+            refreshTree()
+          }}
+        >
+          <i class="ph-light ph-arrows-clockwise text-[14px]"></i>
+        </button>
+        <button
+          class="drv-act"
+          title={$_('Upload')}
+          aria-label={$_('Upload')}
+          onclick={uploadToRoot}
+          disabled={opBusy}
+        >
+          <i class="ph-light ph-cloud-arrow-up text-[14px]"></i>
+        </button>
+      {/if}
     </div>
-
-    <div class="drv-stats">
-      <div class="drv-stat">
-        <div class="drv-stat__k">{$_('Folders')}</div>
-        <div class="drv-stat__v">{totalFolders}</div>
-      </div>
-      <div class="drv-stat">
-        <div class="drv-stat__k">{$_('Files')}</div>
-        <div class="drv-stat__v">{totalFiles}</div>
-      </div>
-      <div class="drv-stat">
-        <div class="drv-stat__k">{$_('Size')}</div>
-        <div class="drv-stat__v">{toHumanSize(totalBytes)}</div>
-      </div>
-    </div>
-
-    <div class="drv-search">
-      <span class="drv-search__wrap">
-        <i class="ph-light ph-magnifying-glass drv-search__icon text-[13px]" aria-hidden="true"></i>
-        <label for={searchFieldId} class="sr-only">{$_('Search this drive')}</label>
-        <input
-          id={searchFieldId}
-          class="drv-input"
-          bind:value={query}
-          placeholder={$_('Search this drive')}
-        />
-      </span>
-      <button
-        class="drv-toggle {showOnlyFolders ? 'drv-toggle--on' : ''}"
-        title={$_('Folders only')}
-        aria-label={$_('Folders only')}
-        aria-pressed={showOnlyFolders}
-        onclick={() => (showOnlyFolders = !showOnlyFolders)}
-      >
-        <i class="ph-light ph-funnel text-[13px]"></i>
-      </button>
-    </div>
-
-    {#if loading}
-      <div class="drv-msg">
-        <i class="ph-light ph-circle-notch animate-spin text-[20px] opacity-60"></i>
-        <p class="drv-msg__s">{$_('Loading…')}</p>
-      </div>
-    {:else if error}
-      <div class="drv-err">
-        <i class="ph-light ph-warning-circle mr-1.5"></i>{error}
-      </div>
-    {:else if rootPath}
-      {#key `${accountOrg}:${rootPath}:${refreshKey}:${query}:${showOnlyFolders}:${authenticated}`}
-        <div class="drv-tree">
-          <TreeView
-            __rootPath={rootPath}
-            __rootParentPath={rootPath}
-            __sourceType="drive"
-            __searchQuery={query}
-            __requestCreateFolderKey={createFolderRequestKey}
-            __requestCreateFolderParentPath={rootPath}
-            __readDirHandler={readDriveDir}
-            __accountOrg={accountOrg}
-            __capabilities={{
-              canCreate: true,
-              canRename: true,
-              canCopyCutPaste: true,
-              canDuplicate: true,
-              canDelete: true,
-              canDragDrop: true,
-              canOpenInTerminal: false,
-              canRevealInOS: true,
-              canVersioning: false,
-              canSecurity: false,
-              canTranslation: false,
-              canVariables: false
-            }}
-          />
-        </div>
-      {/key}
-    {:else}
-      <div class="drv-msg">
-        <i class="ph-light ph-cloud-slash text-[22px] opacity-35"></i>
-        <p class="drv-msg__t mt-2">{$_('Drive unavailable')}</p>
-        <p class="drv-msg__s">{$_('Reconnect or refresh to see your files.')}</p>
-      </div>
-    {/if}
   </div>
-</div>
+{:else}
+  <!-- Habillage seulement : tous les gestionnaires, liaisons et propriétés
+     passés à TreeView sont ceux d'avant. Ce qui change est le langage —
+     surfaces teintées au lieu de bordures dures, rayons du tableau de bord,
+     un seul accent (le lecteur actif), et des tailles de texte qui restent
+     lisibles au lieu de 8 px à 20 % d'opacité. -->
+  <div class="drv-panel flex flex-col h-full font-sans select-none" class:drv-panel--on={isActive}>
+    <div class="drv-head">
+      <span class="drv-head__icon" aria-hidden="true">
+        <i class="ph-light ph-hard-drive text-[15px]"></i>
+      </span>
+
+      <div class="min-w-0 flex-1">
+        <div class="drv-name truncate">{accountLabel || $_('Drive')}</div>
+        {#if accountEmail}
+          <div class="drv-sub truncate">{accountEmail}</div>
+        {/if}
+      </div>
+
+      <div class="flex items-center gap-1 shrink-0">
+        {#if !isActive}
+          <button
+            class="drv-act"
+            title={$_('Set active')}
+            aria-label={$_('Set active')}
+            onclick={() => onActivate && onActivate(accountOrg)}
+          >
+            <i class="ph-light ph-star text-[14px]"></i>
+          </button>
+        {/if}
+        <button
+          class="drv-act"
+          title={$_('Refresh Drive')}
+          aria-label={$_('Refresh Drive')}
+          onclick={async () => {
+            await loadDriveRoot()
+            refreshTree()
+          }}
+        >
+          <i class="ph-light ph-arrows-clockwise text-[14px]"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="flex-1 overflow-y-auto no-scrollbar">
+      <div class="drv-strip">
+        <span class="drv-state {authenticated ? 'drv-state--on' : 'drv-state--off'}">
+          <span class="drv-state__dot" aria-hidden="true"></span>
+          {authenticated ? $_('Active') : $_('Offline')}
+        </span>
+
+        <span class="flex items-center gap-1.5 ml-auto shrink-0">
+          {#if !authenticated}
+            <button class="drv-signin" onclick={openAuthFlow}>{$_('Sign In')}</button>
+          {:else}
+            <button
+              class="drv-act"
+              title={$_('New Folder')}
+              aria-label={$_('New Folder')}
+              onclick={createRootFolder}
+            >
+              <i class="ph-light ph-folder-plus text-[14px]"></i>
+            </button>
+            <button
+              class="drv-act"
+              title={$_('Upload')}
+              aria-label={$_('Upload')}
+              onclick={uploadToRoot}
+              disabled={opBusy}
+            >
+              <i class="ph-light ph-cloud-arrow-up text-[14px]"></i>
+            </button>
+          {/if}
+        </span>
+      </div>
+
+      <div class="drv-stats">
+        <div class="drv-stat">
+          <div class="drv-stat__k">{$_('Folders')}</div>
+          <div class="drv-stat__v">{totalFolders}</div>
+        </div>
+        <div class="drv-stat">
+          <div class="drv-stat__k">{$_('Files')}</div>
+          <div class="drv-stat__v">{totalFiles}</div>
+        </div>
+        <div class="drv-stat">
+          <div class="drv-stat__k">{$_('Size')}</div>
+          <div class="drv-stat__v">{toHumanSize(totalBytes)}</div>
+        </div>
+      </div>
+
+      <div class="drv-search">
+        <span class="drv-search__wrap">
+          <i class="ph-light ph-magnifying-glass drv-search__icon text-[13px]" aria-hidden="true"
+          ></i>
+          <label for={searchFieldId} class="sr-only">{$_('Search this drive')}</label>
+          <input
+            id={searchFieldId}
+            class="drv-input"
+            bind:value={query}
+            placeholder={$_('Search this drive')}
+          />
+        </span>
+        <button
+          class="drv-toggle {showOnlyFolders ? 'drv-toggle--on' : ''}"
+          title={$_('Folders only')}
+          aria-label={$_('Folders only')}
+          aria-pressed={showOnlyFolders}
+          onclick={() => (showOnlyFolders = !showOnlyFolders)}
+        >
+          <i class="ph-light ph-funnel text-[13px]"></i>
+        </button>
+      </div>
+
+      {#if loading}
+        <div class="drv-msg">
+          <i class="ph-light ph-circle-notch animate-spin text-[20px] opacity-60"></i>
+          <p class="drv-msg__s">{$_('Loading…')}</p>
+        </div>
+      {:else if error}
+        <div class="drv-err">
+          <i class="ph-light ph-warning-circle mr-1.5"></i>{error}
+        </div>
+      {:else if rootPath}
+        {#key `${accountOrg}:${rootPath}:${refreshKey}:${query}:${showOnlyFolders}:${authenticated}`}
+          <div class="drv-tree">
+            <TreeView
+              __rootPath={rootPath}
+              __rootParentPath={rootPath}
+              __sourceType="drive"
+              __searchQuery={query}
+              __requestCreateFolderKey={createFolderRequestKey}
+              __requestCreateFolderParentPath={rootPath}
+              __readDirHandler={readDriveDir}
+              __accountOrg={accountOrg}
+              __capabilities={{
+                canCreate: true,
+                canRename: true,
+                canCopyCutPaste: true,
+                canDuplicate: true,
+                canDelete: true,
+                canDragDrop: true,
+                canOpenInTerminal: false,
+                canRevealInOS: true,
+                canVersioning: false,
+                canSecurity: false,
+                canTranslation: false,
+                canVariables: false
+              }}
+            />
+          </div>
+        {/key}
+      {:else}
+        <div class="drv-msg">
+          <i class="ph-light ph-cloud-slash text-[22px] opacity-35"></i>
+          <p class="drv-msg__t mt-2">{$_('Drive unavailable')}</p>
+          <p class="drv-msg__s">{$_('Reconnect or refresh to see your files.')}</p>
+        </div>
+      {/if}
+    </div>
+  </div>
+{/if}
 
 <style lang="postcss">
   .sr-only {
